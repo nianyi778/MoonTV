@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import '../lib/cron';
-
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import './globals.css';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
@@ -67,6 +67,7 @@ export default function RootLayout({
             {children}
           </SiteProvider>
         </ThemeProvider>
+        <SpeedInsights></SpeedInsights>
       </body>
     </html>
   );
