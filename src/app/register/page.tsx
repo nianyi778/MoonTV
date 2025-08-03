@@ -3,7 +3,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Suspense, useState } from 'react';
 
 import { useSite } from '@/components/SiteProvider';
@@ -11,7 +11,6 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 function RegisterPageClient() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -30,10 +29,10 @@ function RegisterPageClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-
+      // eslint-disable-next-line no-console
+      console.debug('注册请求结果:', res);
       if (res.ok) {
-        const redirect = searchParams.get('redirect') || '/';
-        router.replace(redirect);
+        router.replace('/');
       } else {
         const data = await res.json().catch(() => ({}));
         setError(data.error ?? '服务器错误');
