@@ -9,8 +9,6 @@ import { Suspense, useState } from 'react';
 import { useSite } from '@/components/SiteProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
-import { VersionDisplay } from '@/app/login/page';
-
 function RegisterPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -119,8 +117,6 @@ function RegisterPageClient() {
           </Link>
         </p>
       </div>
-      {/* 版本信息显示 */}
-      <VersionDisplay />
     </div>
   );
 }
