@@ -185,7 +185,11 @@ function LoginPageClient() {
           </span>
           {/* shouldAskUsername */}
           {shouldAskUsername && enableRegister ? (
-            <Link href='/register' className='text-green-600 hover:underline'>
+            <Link
+              href='/register'
+              replace
+              className='text-green-600 hover:underline'
+            >
               注册
             </Link>
           ) : null}

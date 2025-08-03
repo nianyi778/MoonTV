@@ -6,7 +6,6 @@ import { getAuthInfoFromCookie } from '@/lib/auth';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
   // 跳过不需要认证的路径
   if (shouldSkipAuth(pathname)) {
     return NextResponse.next();
@@ -118,6 +117,7 @@ function handleAuthFailure(
 // 判断是否需要跳过认证的路径
 function shouldSkipAuth(pathname: string): boolean {
   const skipPaths = [
+    '/',
     '/_next',
     '/favicon.ico',
     '/robots.txt',

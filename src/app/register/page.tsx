@@ -112,7 +112,7 @@ function RegisterPageClient() {
             </a>
             联系管理员重置。
           </span>
-          <Link href='/login' className='text-blue-600 hover:underline'>
+          <Link href='/login' replace className='text-blue-600 hover:underline'>
             登录
           </Link>
         </p>
