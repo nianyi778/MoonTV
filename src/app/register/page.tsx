@@ -103,7 +103,17 @@ function RegisterPageClient() {
           </div>
         </form>
         <p className='mt-2 text-xs text-gray-400 dark:text-gray-500 flex justify-between'>
-          <span>如果忘记密码，请联系管理员重置。</span>
+          <span>
+            {' '}
+            如果忘记密码，请
+            <a
+              href='mailto:qiqitv@divinations.top?subject=密码忘记&body=请提供您的用户名和新密码，另外提供最近一次登录的时间和地址，以便我们核实您的身份。'
+              className='text-blue-600 hover:underline'
+            >
+              邮件
+            </a>
+            联系管理员重置。
+          </span>
           <Link href='/login' className='text-blue-600 hover:underline'>
             登录
           </Link>
