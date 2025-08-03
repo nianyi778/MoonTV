@@ -3,6 +3,7 @@
 'use client';
 
 import { AlertCircle, CheckCircle } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
@@ -12,7 +13,7 @@ import { useSite } from '@/components/SiteProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 // 版本显示组件
-function VersionDisplay() {
+export function VersionDisplay() {
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
   const [isChecking, setIsChecking] = useState(true);
 
@@ -32,12 +33,7 @@ function VersionDisplay() {
   }, []);
 
   return (
-    <button
-      onClick={() =>
-        window.open('https://github.com/senshinya/MoonTV', '_blank')
-      }
-      className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 transition-colors cursor-pointer'
-    >
+    <button className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 transition-colors cursor-pointer'>
       <span className='font-mono'>v{CURRENT_VERSION}</span>
       {!isChecking && updateStatus !== UpdateStatus.FETCH_FAILED && (
         <div
@@ -122,33 +118,6 @@ function LoginPageClient() {
     }
   };
 
-  // 处理注册逻辑
-  const handleRegister = async () => {
-    setError(null);
-    if (!password || !username) return;
-
-    try {
-      setLoading(true);
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (res.ok) {
-        const redirect = searchParams.get('redirect') || '/';
-        router.replace(redirect);
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error ?? '服务器错误');
-      }
-    } catch (error) {
-      setError('网络错误，请稍后重试');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden'>
       <div className='absolute top-4 right-4'>
@@ -156,7 +125,7 @@ function LoginPageClient() {
       </div>
       <div className='relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800'>
         <h1 className='text-green-600 tracking-tight text-center text-3xl font-extrabold mb-8 bg-clip-text drop-shadow-sm'>
-          {siteName}
+          {siteName} - 登录
         </h1>
         <form onSubmit={handleSubmit} className='space-y-8'>
           {shouldAskUsername && (
@@ -195,39 +164,22 @@ function LoginPageClient() {
             <p className='text-sm text-red-600 dark:text-red-400'>{error}</p>
           )}
 
-          {/* 登录 / 注册按钮 */}
-          {shouldAskUsername && enableRegister ? (
-            <div className='flex gap-4'>
-              <button
-                type='button'
-                onClick={handleRegister}
-                disabled={!password || !username || loading}
-                className='flex-1 inline-flex justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
-              >
-                {loading ? '注册中...' : '注册'}
-              </button>
-              <button
-                type='submit'
-                disabled={
-                  !password || loading || (shouldAskUsername && !username)
-                }
-                className='flex-1 inline-flex justify-center rounded-lg bg-green-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-50'
-              >
-                {loading ? '登录中...' : '登录'}
-              </button>
-            </div>
-          ) : (
-            <button
-              type='submit'
-              disabled={
-                !password || loading || (shouldAskUsername && !username)
-              }
-              className='inline-flex w-full justify-center rounded-lg bg-green-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-50'
-            >
-              {loading ? '登录中...' : '登录'}
-            </button>
-          )}
+          <button
+            type='submit'
+            disabled={!password || loading || (shouldAskUsername && !username)}
+            className='inline-flex w-full justify-center rounded-lg bg-green-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-50'
+          >
+            {loading ? '登录中...' : '登录'}
+          </button>
         </form>
+        <p className='mt-2 text-xs text-gray-400 dark:text-gray-500 flex justify-between'>
+          <span>如果忘记密码，请联系管理员重置。</span>
+          {enableRegister ? (
+            <Link href='/register' className='text-green-600 hover:underline'>
+              注册
+            </Link>
+          ) : null}
+        </p>
       </div>
 
       {/* 版本信息显示 */}
