@@ -18,8 +18,10 @@ function RegisterPageClient() {
   const { siteName } = useSite();
 
   // 处理注册逻辑
-  const handleRegister = async () => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setError(null);
+
     if (!password || !username) return;
 
     try {
@@ -29,8 +31,6 @@ function RegisterPageClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      // eslint-disable-next-line no-console
-      console.debug('注册请求结果:', res);
       if (res.ok) {
         router.replace('/');
       } else {
