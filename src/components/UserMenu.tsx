@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import { checkForUpdates, CURRENT_VERSION, UpdateStatus } from '@/lib/version';
 
-interface AuthInfo {
+export interface AuthInfo {
   username?: string;
   role?: 'owner' | 'admin' | 'user';
 }
@@ -401,12 +401,7 @@ export const UserMenu: React.FC = () => {
           <div className='my-1 border-t border-gray-200 dark:border-gray-700'></div>
 
           {/* 版本信息 */}
-          <button
-            onClick={() =>
-              window.open('https://github.com/senshinya/MoonTV', '_blank')
-            }
-            className='w-full px-3 py-2 text-center flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-xs'
-          >
+          <button className='w-full px-3 py-2 text-center flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-xs'>
             <div className='flex items-center gap-1'>
               <span className='font-mono'>v{CURRENT_VERSION}</span>
               {!isChecking &&
@@ -718,6 +713,20 @@ export const UserMenu: React.FC = () => {
       </div>
     </>
   );
+
+  if (!authInfo) {
+    return (
+      <div className='relative'>
+        <button
+          onClick={() => router.push('/login')}
+          className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors'
+          aria-label='User Menu'
+        >
+          <User className='w-full h-full' />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>

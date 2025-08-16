@@ -6,6 +6,7 @@ import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 
+import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 // 客户端收藏 API
 import {
   clearAllFavorites,
@@ -21,6 +22,7 @@ import ContinueWatching from '@/components/ContinueWatching';
 import PageLayout from '@/components/PageLayout';
 import ScrollableRow from '@/components/ScrollableRow';
 import { useSite } from '@/components/SiteProvider';
+import { AuthInfo } from '@/components/UserMenu';
 import VideoCard from '@/components/VideoCard';
 
 function HomeClient() {
@@ -29,6 +31,7 @@ function HomeClient() {
   const [hotTvShows, setHotTvShows] = useState<DoubanItem[]>([]);
   const [hotVarietyShows, setHotVarietyShows] = useState<DoubanItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
   const { announcement } = useSite();
 
   const [showAnnouncement, setShowAnnouncement] = useState(false);
@@ -60,6 +63,8 @@ function HomeClient() {
   const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
 
   useEffect(() => {
+    const auth = getAuthInfoFromBrowserCookie();
+    setAuthInfo(auth);
     const fetchDoubanData = async () => {
       try {
         setLoading(true);
@@ -129,7 +134,7 @@ function HomeClient() {
 
   // 当切换到收藏夹时加载收藏数据
   useEffect(() => {
-    if (activeTab !== 'favorites') return;
+    if (activeTab !== 'favorites' || !authInfo) return;
 
     const loadFavorites = async () => {
       const allFavorites = await getAllFavorites();
@@ -147,7 +152,7 @@ function HomeClient() {
     );
 
     return unsubscribe;
-  }, [activeTab]);
+  }, [activeTab, authInfo]);
 
   const handleCloseAnnouncement = (announcement: string) => {
     setShowAnnouncement(false);
@@ -189,23 +194,29 @@ function HomeClient() {
                   </button>
                 )}
               </div>
-              <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'>
-                {favoriteItems.map((item) => (
-                  <div key={item.id + item.source} className='w-full'>
-                    <VideoCard
-                      query={item.search_title}
-                      {...item}
-                      from='favorite'
-                      type={item.episodes > 1 ? 'tv' : ''}
-                    />
-                  </div>
-                ))}
-                {favoriteItems.length === 0 && (
-                  <div className='col-span-full text-center text-gray-500 py-8 dark:text-gray-400'>
-                    暂无收藏内容
-                  </div>
-                )}
-              </div>
+              {authInfo ? (
+                <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'>
+                  {favoriteItems.map((item) => (
+                    <div key={item.id + item.source} className='w-full'>
+                      <VideoCard
+                        query={item.search_title}
+                        {...item}
+                        from='favorite'
+                        type={item.episodes > 1 ? 'tv' : ''}
+                      />
+                    </div>
+                  ))}
+                  {favoriteItems.length === 0 ? (
+                    <div className='col-span-full text-center text-gray-500 py-8 dark:text-gray-400'>
+                      暂无收藏内容
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className='col-span-full text-center  hover:underline text-blue-600'>
+                  <Link href='/login'>去登录~，查看收藏内容</Link>
+                </div>
+              )}
             </section>
           ) : (
             // 首页视图

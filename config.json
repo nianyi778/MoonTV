@@ -84,6 +84,75 @@
     "xiaomaomi": {
       "api": "https://zy.xmm.hk/api.php/provide/vod",
       "name": "小猫咪资源"
+    },
+
+    "hwba": {
+      "api": "https://hw8.live/api.php/provide/vod/",
+      "name": "华为吧"
+    },
+    "ddys": {
+      "api": "cms://ddys",
+      "name": "低端影视"
+    },
+    "zxzj": {
+      "api": "cms://zxzj",
+      "name": "在线之家"
+    },
+    "suoni": {
+      "api": "https://suoniapi.com/api.php/provide/vod/",
+      "name": "索尼资源"
+    },
+    "tiankong": {
+      "api": "https://api.tiankongapi.com/api.php/provide/vod/",
+      "name": "天空资源"
+    },
+    "feisu": {
+      "api": "https://www.feisuzyapi.com/api.php/provide/vod/",
+      "name": "飞速资源"
+    },
+    "hongniu": {
+      "api": "https://www.hongniuzy2.com/api.php/provide/vod/",
+      "name": "红牛资源"
+    },
+    "ffzyapi": {
+      "api": "https://cj.ffzyapi.com/api.php/provide/vod/",
+      "name": "非凡资源"
+    },
+    "guangsu": {
+      "api": "https://api.guangsuapi.com/api.php/provide/vod/",
+      "name": "光速资源"
+    },
+    "apibdzy": {
+      "api": "https://api.apibdzy.com/api.php/provide/vod/",
+      "name": "百度云资源"
+    },
+    "ckzy": {
+      "api": "https://ckzy.me/api.php/provide/vod/",
+      "name": "ck资源"
+    },
+    "kczy": {
+      "api": "https://caiji.kczyapi.com/api.php/provide/vod/",
+      "name": "快播资源"
+    },
+    "uku": {
+      "api": "https://api.ukuapi.com/api.php/provide/vod/",
+      "name": "U酷资源"
+    },
+    "sdzy": {
+      "api": "https://sdzyapi.com/api.php/provide/vod/",
+      "name": "闪电资源"
+    },
+    "hhzy": {
+      "api": "https://hhzyapi.com/api.php/provide/vod/",
+      "name": "火狐资源"
+    },
+    "huya": {
+      "api": "https://www.huyaapi.com/api.php/provide/vod/",
+      "name": "虎牙资源"
+    },
+    "siquan": {
+      "api": "https://pg.fenwe078.cf/api.php/provide/vod/",
+      "name": "四圈资源"
     }
   }
 }
