@@ -1112,215 +1112,114 @@ function PlayPageClient() {
 
   return (
     <PageLayout activePath='/play'>
+      {/* 全屏深色背景 */}
       <div className='min-h-screen bg-[#0a0a0a]'>
-        {/* 全屏播放器区域 - 带海报背景 */}
-        <div className='relative w-full'>
-          {/* 背景海报模糊层 */}
-          {videoCover && (
-            <div className='absolute inset-0 z-0'>
-              <img
-                src={processImageUrl(videoCover)}
-                alt=''
-                className='w-full h-full object-cover opacity-30 blur-xl'
-              />
-              <div className='absolute inset-0 bg-gradient-to-b from-black/60 via-black/80 to-[#0a0a0a]'></div>
-            </div>
-          )}
+        {/* 播放器区域 */}
+        <div className='w-full bg-black'>
+          <div className='max-w-[1800px] mx-auto'>
+            <div className='relative w-full aspect-video'>
+              {videoUrl && (
+                <VidstackPlayer
+                  ref={playerRef}
+                  src={videoUrl}
+                  poster={processImageUrl(videoCover)}
+                  title={`${videoTitle}${
+                    totalEpisodes > 1 ? ` - 第${currentEpisodeIndex + 1}集` : ''
+                  }`}
+                  autoplay={true}
+                  blockAdEnabled={blockAdEnabled}
+                  skipConfig={skipConfig}
+                  resumeTime={resumeTimeRef.current || undefined}
+                  onTimeUpdate={handlePlayerTimeUpdate}
+                  onEnded={handlePlayerEnded}
+                  onCanPlay={handlePlayerCanPlay}
+                  onError={handlePlayerError}
+                  onPause={handlePlayerPause}
+                  onNextEpisode={
+                    currentEpisodeIndex < totalEpisodes - 1
+                      ? handleNextEpisode
+                      : undefined
+                  }
+                />
+              )}
 
-          {/* 播放器容器 */}
-          <div className='relative z-10 w-full aspect-video max-h-[75vh] bg-black/50'>
-            {videoUrl && (
-              <VidstackPlayer
-                ref={playerRef}
-                src={videoUrl}
-                poster={processImageUrl(videoCover)}
-                title={`${videoTitle}${
-                  totalEpisodes > 1 ? ` - 第${currentEpisodeIndex + 1}集` : ''
-                }`}
-                autoplay={true}
-                blockAdEnabled={blockAdEnabled}
-                skipConfig={skipConfig}
-                resumeTime={resumeTimeRef.current || undefined}
-                onTimeUpdate={handlePlayerTimeUpdate}
-                onEnded={handlePlayerEnded}
-                onCanPlay={handlePlayerCanPlay}
-                onError={handlePlayerError}
-                onPause={handlePlayerPause}
-                onNextEpisode={
-                  currentEpisodeIndex < totalEpisodes - 1
-                    ? handleNextEpisode
-                    : undefined
-                }
-              />
-            )}
-
-            {/* 换源加载蒙层 */}
-            {isVideoLoading && (
-              <div className='absolute inset-0 bg-black/90 flex items-center justify-center z-[500]'>
-                <div className='text-center'>
-                  <div className='w-16 h-16 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin mx-auto mb-4'></div>
-                  <p className='text-white text-lg font-medium'>
-                    {videoLoadingStage === 'sourceChanging'
-                      ? '切换播放源...'
-                      : '加载中...'}
-                  </p>
+              {/* 加载状态 */}
+              {isVideoLoading && (
+                <div className='absolute inset-0 bg-black flex items-center justify-center z-50'>
+                  <div className='flex flex-col items-center gap-4'>
+                    <div className='w-12 h-12 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin' />
+                    <span className='text-gray-400'>
+                      {videoLoadingStage === 'sourceChanging'
+                        ? '正在切换播放源...'
+                        : '视频加载中...'}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
-        {/* 影片信息区域 */}
-        <div className='relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20'>
-          <div className='flex flex-col md:flex-row gap-8'>
-            {/* 左侧：封面海报 */}
-            <div className='flex-shrink-0 w-48 md:w-64 mx-auto md:mx-0'>
-              <div className='aspect-[2/3] rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10'>
-                {videoCover ? (
-                  <img
-                    src={processImageUrl(videoCover)}
-                    alt={videoTitle}
-                    className='w-full h-full object-cover'
-                  />
-                ) : (
-                  <div className='w-full h-full bg-white/5 flex items-center justify-center text-gray-500'>
-                    暂无封面
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 右侧：影片详情 */}
-            <div className='flex-1 pt-4 md:pt-16'>
-              {/* 标题 */}
-              <h1 className='text-3xl md:text-4xl font-bold text-white mb-4'>
-                {videoTitle || '影片标题'}
-              </h1>
-
-              {/* 评分和信息 */}
-              <div className='flex flex-wrap items-center gap-4 mb-6'>
-                {detail?.class && (
-                  <span className='px-3 py-1 bg-brand-500/20 text-brand-500 rounded-full text-sm font-medium'>
-                    {detail.class}
+        {/* 内容区域 */}
+        <div className='max-w-7xl mx-auto px-4 lg:px-8 py-6'>
+          {/* 标题栏 */}
+          <div className='flex items-start justify-between gap-4 mb-6'>
+            <div>
+              <h1 className='text-2xl md:text-3xl font-bold text-white flex items-center gap-3'>
+                {videoTitle || '加载中...'}
+                {totalEpisodes > 1 && (
+                  <span className='text-lg font-normal text-gray-400'>
+                    第{currentEpisodeIndex + 1}集
                   </span>
                 )}
+              </h1>
+              <div className='flex items-center gap-3 mt-2 text-sm text-gray-400'>
+                {detail?.class && <span>{detail.class}</span>}
+                {detail?.year && <span>{detail.year}</span>}
                 {detail?.source_name && (
-                  <span className='px-3 py-1 bg-white/10 text-gray-300 rounded-full text-sm'>
+                  <span className='px-2 py-0.5 bg-white/10 rounded text-xs'>
                     {detail.source_name}
                   </span>
                 )}
-                {(detail?.year || videoYear) && (
-                  <span className='text-gray-400 text-sm'>
-                    {detail?.year || videoYear}
-                  </span>
-                )}
-                {totalEpisodes > 1 && (
-                  <span className='text-gray-400 text-sm'>
-                    共 {totalEpisodes} 集
-                  </span>
-                )}
-              </div>
-
-              {/* 操作按钮组 */}
-              <div className='flex flex-wrap items-center gap-3 mb-8'>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleFavorite();
-                  }}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-all ${
-                    favorited
-                      ? 'bg-red-500 text-white'
-                      : 'bg-white/10 text-white hover:bg-white/20'
-                  }`}
-                >
-                  <Heart
-                    className={`w-5 h-5 ${favorited ? 'fill-white' : ''}`}
-                  />
-                  <span>{favorited ? '已收藏' : '添加收藏'}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({
-                        title: videoTitle,
-                        url: window.location.href,
-                      });
-                    } else {
-                      navigator.clipboard.writeText(window.location.href);
-                    }
-                  }}
-                  className='flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all'
-                >
-                  <svg
-                    className='w-5 h-5'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2'
-                      d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z'
-                    />
-                  </svg>
-                  <span>分享</span>
-                </button>
-              </div>
-
-              {/* 剧情简介 */}
-              <div className='mb-8'>
-                <h2 className='text-lg font-semibold text-white mb-3'>
-                  剧情简介
-                </h2>
-                <p className='text-gray-400 leading-relaxed'>
-                  {detail?.desc || '暂无简介'}
-                </p>
-              </div>
-
-              {/* 详细信息 */}
-              <div className='flex flex-wrap gap-4 text-sm'>
-                {detail?.type_name && (
-                  <div>
-                    <span className='text-gray-500'>类型：</span>
-                    <span className='text-gray-300 ml-1'>
-                      {detail.type_name}
-                    </span>
-                  </div>
-                )}
-                {(detail?.year || videoYear) && (
-                  <div>
-                    <span className='text-gray-500'>上映年份：</span>
-                    <span className='text-gray-300 ml-1'>
-                      {detail?.year || videoYear}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
+
+            {/* 收藏按钮 */}
+            <button
+              onClick={handleToggleFavorite}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                favorited
+                  ? 'bg-red-500/20 text-red-400'
+                  : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <Heart className={`w-5 h-5 ${favorited ? 'fill-current' : ''}`} />
+              <span className='hidden sm:inline'>
+                {favorited ? '已收藏' : '收藏'}
+              </span>
+            </button>
           </div>
 
-          {/* 选集区域 */}
-          {totalEpisodes > 1 && (
-            <div className='mt-12'>
-              <div className='flex items-center justify-between mb-4'>
-                <h2 className='text-xl font-semibold text-white'>选集</h2>
-                <span className='text-sm text-gray-400'>
-                  当前第 {currentEpisodeIndex + 1} 集
-                </span>
-              </div>
-              <div className='bg-white/5 rounded-xl p-4 border border-white/10'>
-                <div className='grid grid-cols-[repeat(auto-fill,minmax(48px,1fr))] gap-2 max-h-[200px] overflow-y-auto'>
+          {/* 选集 + 换源 两栏布局 */}
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+            {/* 选集区域 */}
+            {totalEpisodes > 1 && (
+              <div className='bg-white/[0.02] rounded-2xl p-5 border border-white/5'>
+                <div className='flex items-center justify-between mb-4'>
+                  <h2 className='text-lg font-medium text-white'>选集</h2>
+                  <span className='text-sm text-gray-500'>
+                    {totalEpisodes}集
+                  </span>
+                </div>
+                <div className='grid grid-cols-[repeat(auto-fill,minmax(44px,1fr))] gap-2 max-h-[280px] overflow-y-auto pr-1'>
                   {Array.from({ length: totalEpisodes }, (_, i) => (
                     <button
                       key={i}
                       onClick={() => handleEpisodeChange(i)}
-                      className={`h-10 flex items-center justify-center text-sm font-medium rounded-lg transition-all ${
+                      className={`h-10 rounded-lg text-sm font-medium transition-all ${
                         i === currentEpisodeIndex
                           ? 'bg-brand-500 text-white'
-                          : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                          : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
                       }`}
                     >
                       {i + 1}
@@ -1328,120 +1227,113 @@ function PlayPageClient() {
                   ))}
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* 换源区域 */}
-          <div className='mt-8'>
-            <div className='flex items-center justify-between mb-4'>
-              <h2 className='text-xl font-semibold text-white'>播放源</h2>
-              <span className='text-sm text-gray-400'>
-                共 {availableSources.length} 个源
-              </span>
-            </div>
-            <div className='bg-white/5 rounded-xl border border-white/10 overflow-hidden'>
+            {/* 播放源区域 */}
+            <div
+              className={`bg-white/[0.02] rounded-2xl p-5 border border-white/5 ${
+                totalEpisodes <= 1 ? 'lg:col-span-2' : ''
+              }`}
+            >
+              <div className='flex items-center justify-between mb-4'>
+                <h2 className='text-lg font-medium text-white'>播放源</h2>
+                <span className='text-sm text-gray-500'>
+                  {availableSources.length}个可用
+                </span>
+              </div>
+
               {sourceSearchLoading ? (
-                <div className='flex items-center justify-center py-12'>
-                  <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500'></div>
-                  <span className='ml-3 text-gray-400'>搜索播放源中...</span>
+                <div className='flex items-center justify-center py-8'>
+                  <div className='w-6 h-6 border-2 border-brand-500/20 border-t-brand-500 rounded-full animate-spin' />
+                  <span className='ml-3 text-gray-500'>搜索中...</span>
                 </div>
               ) : availableSources.length === 0 ? (
-                <div className='text-center py-12 text-gray-400'>
-                  暂无可用播放源
-                </div>
+                <div className='py-8 text-center text-gray-500'>暂无可用源</div>
               ) : (
-                <div className='divide-y divide-white/5'>
+                <div className='space-y-2 max-h-[280px] overflow-y-auto pr-1'>
                   {availableSources.map((source) => {
-                    const isCurrentSource =
+                    const isCurrent =
                       source.source === currentSource &&
                       source.id === currentId;
                     const sourceKey = `${source.source}-${source.id}`;
-                    const videoInfo = precomputedVideoInfo?.get(sourceKey);
+                    const info = precomputedVideoInfo?.get(sourceKey);
 
                     return (
                       <div
                         key={sourceKey}
                         onClick={() =>
-                          !isCurrentSource &&
+                          !isCurrent &&
                           handleSourceChange(
                             source.source,
                             source.id,
                             source.title
                           )
                         }
-                        className={`flex items-center gap-4 p-4 transition-all cursor-pointer ${
-                          isCurrentSource
-                            ? 'bg-brand-500/10'
-                            : 'hover:bg-white/5'
+                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+                          isCurrent
+                            ? 'bg-brand-500/10 ring-1 ring-brand-500/30'
+                            : 'bg-white/[0.02] hover:bg-white/5'
                         }`}
                       >
-                        {/* 封面 */}
-                        <div className='w-16 h-20 bg-white/10 rounded-lg overflow-hidden flex-shrink-0'>
-                          {source.poster && (
-                            <img
-                              src={processImageUrl(source.poster)}
-                              alt={source.title}
-                              className='w-full h-full object-cover'
-                            />
-                          )}
-                        </div>
-
-                        {/* 信息 */}
-                        <div className='flex-1 min-w-0'>
-                          <div className='flex items-center gap-2 mb-2'>
-                            <span className='text-white font-medium'>
-                              {source.source_name}
-                            </span>
-                            {isCurrentSource && (
-                              <span className='px-2 py-0.5 bg-brand-500 text-white text-xs rounded-full'>
-                                当前播放
-                              </span>
-                            )}
-                          </div>
-                          <div className='flex flex-wrap items-center gap-3 text-sm'>
-                            {source.episodes.length > 1 && (
-                              <span className='text-gray-400'>
-                                {source.episodes.length} 集
-                              </span>
-                            )}
-                            {videoInfo && !videoInfo.hasError && (
-                              <>
-                                <span
-                                  className={`px-2 py-0.5 rounded text-xs ${
-                                    ['4K', '2K'].includes(videoInfo.quality)
-                                      ? 'bg-purple-500/20 text-purple-400'
-                                      : ['1080p', '720p'].includes(
-                                          videoInfo.quality
-                                        )
-                                      ? 'bg-brand-500/20 text-brand-400'
-                                      : 'bg-yellow-500/20 text-yellow-400'
-                                  }`}
-                                >
-                                  {videoInfo.quality}
-                                </span>
-                                <span className='text-green-400 text-xs'>
-                                  {videoInfo.loadSpeed}
-                                </span>
-                                <span className='text-orange-400 text-xs'>
-                                  {videoInfo.pingTime}ms
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* 播放按钮 */}
-                        {!isCurrentSource && (
-                          <div className='flex-shrink-0 w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center hover:bg-brand-600 transition-colors'>
+                        {/* 播放状态指示 */}
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            isCurrent ? 'bg-brand-500' : 'bg-white/5'
+                          }`}
+                        >
+                          {isCurrent ? (
+                            <div className='w-3 h-3 bg-white rounded-sm' />
+                          ) : (
                             <svg
-                              className='w-5 h-5 text-white ml-0.5'
+                              className='w-4 h-4 text-gray-400 ml-0.5'
                               fill='currentColor'
                               viewBox='0 0 24 24'
                             >
                               <path d='M8 5v14l11-7z' />
                             </svg>
+                          )}
+                        </div>
+
+                        {/* 源信息 */}
+                        <div className='flex-1 min-w-0'>
+                          <div className='flex items-center gap-2'>
+                            <span
+                              className={`font-medium ${
+                                isCurrent ? 'text-brand-400' : 'text-white'
+                              }`}
+                            >
+                              {source.source_name}
+                            </span>
+                            {source.episodes.length > 1 && (
+                              <span className='text-xs text-gray-500'>
+                                {source.episodes.length}集
+                              </span>
+                            )}
                           </div>
-                        )}
+                          {info && !info.hasError && (
+                            <div className='flex items-center gap-2 mt-1 text-xs'>
+                              <span
+                                className={
+                                  ['4K', '2K'].includes(info.quality)
+                                    ? 'text-purple-400'
+                                    : ['1080p', '720p'].includes(info.quality)
+                                    ? 'text-green-400'
+                                    : 'text-yellow-400'
+                                }
+                              >
+                                {info.quality}
+                              </span>
+                              <span className='text-gray-500'>•</span>
+                              <span className='text-gray-400'>
+                                {info.loadSpeed}
+                              </span>
+                              <span className='text-gray-500'>•</span>
+                              <span className='text-gray-400'>
+                                {info.pingTime}ms
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -1450,8 +1342,15 @@ function PlayPageClient() {
             </div>
           </div>
 
-          {/* 底部留白 */}
-          <div className='h-16'></div>
+          {/* 简介区域 */}
+          {detail?.desc && (
+            <div className='mt-6 bg-white/[0.02] rounded-2xl p-5 border border-white/5'>
+              <h2 className='text-lg font-medium text-white mb-3'>简介</h2>
+              <p className='text-gray-400 text-sm leading-relaxed'>
+                {detail.desc}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </PageLayout>
@@ -1463,7 +1362,7 @@ export default function PlayPage() {
     <Suspense
       fallback={
         <div className='flex items-center justify-center min-h-screen bg-[#0a0a0a]'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500'></div>
+          <div className='w-8 h-8 border-2 border-brand-500/20 border-t-brand-500 rounded-full animate-spin' />
         </div>
       }
     >
