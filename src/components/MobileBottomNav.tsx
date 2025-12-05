@@ -92,24 +92,18 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                 )}
                 <div
                   className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${
-                    active
-                      ? 'bg-brand-500/10 dark:bg-brand-500/20'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                    active ? 'bg-brand-500/20' : 'hover:bg-white/10'
                   }`}
                 >
                   <item.icon
                     className={`h-5 w-5 transition-colors duration-200 ${
-                      active
-                        ? 'text-brand-600 dark:text-brand-400'
-                        : 'text-gray-500 dark:text-gray-400'
+                      active ? 'text-brand-500' : 'text-gray-400'
                     }`}
                   />
                 </div>
                 <span
                   className={`text-[10px] font-medium transition-colors duration-200 ${
-                    active
-                      ? 'text-brand-600 dark:text-brand-400'
-                      : 'text-gray-500 dark:text-gray-400'
+                    active ? 'text-brand-500' : 'text-gray-400'
                   }`}
                 >
                   {item.label}

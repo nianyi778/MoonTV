@@ -181,7 +181,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
               </div>
               <button
                 onClick={handleToggle}
-                className={`flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 dark:hover:text-brand-400 transition-all duration-200 ${
+                className={`flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 text-gray-400 hover:text-brand-500 hover:bg-brand-500/10 transition-all duration-200 ${
                   isCollapsed ? 'mx-auto' : ''
                 }`}
               >
@@ -190,7 +190,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
             </div>
 
             {/* 分隔线 */}
-            <div className='mx-4 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent' />
+            <div className='mx-4 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent' />
 
             {/* 首页和搜索导航 */}
             <nav className='px-3 mt-6 space-y-2'>
@@ -200,14 +200,14 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                 className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-all duration-200 ${
                   active === '/'
                     ? 'bg-brand-500 text-white shadow-glow'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    : 'text-gray-400 hover:bg-white/10'
                 } ${isCollapsed ? 'justify-center px-3' : ''}`}
               >
                 <Home
                   className={`h-5 w-5 flex-shrink-0 ${
                     active === '/'
                       ? 'text-white'
-                      : 'text-gray-500 dark:text-gray-400 group-hover:text-brand-500'
+                      : 'text-gray-400 group-hover:text-brand-500'
                   }`}
                 />
                 {!isCollapsed && <span className='text-sm'>首页</span>}
@@ -222,14 +222,14 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                 className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-all duration-200 ${
                   active === '/search'
                     ? 'bg-brand-500 text-white shadow-glow'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    : 'text-gray-400 hover:bg-white/10'
                 } ${isCollapsed ? 'justify-center px-3' : ''}`}
               >
                 <Search
                   className={`h-5 w-5 flex-shrink-0 ${
                     active === '/search'
                       ? 'text-white'
-                      : 'text-gray-500 dark:text-gray-400 group-hover:text-brand-500'
+                      : 'text-gray-400 group-hover:text-brand-500'
                   }`}
                 />
                 {!isCollapsed && <span className='text-sm'>搜索</span>}
@@ -239,7 +239,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
             {/* 分类标题 */}
             {!isCollapsed && (
               <div className='px-6 mt-8 mb-2'>
-                <span className='text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500'>
+                <span className='text-xs font-semibold uppercase tracking-wider text-gray-500'>
                   发现
                 </span>
               </div>
@@ -265,14 +265,14 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                       className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-all duration-200 ${
                         isActive
                           ? 'bg-brand-500 text-white shadow-glow'
-                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                          : 'text-gray-400 hover:bg-white/10'
                       } ${isCollapsed ? 'justify-center px-3' : ''}`}
                     >
                       <Icon
                         className={`h-5 w-5 flex-shrink-0 ${
                           isActive
                             ? 'text-white'
-                            : 'text-gray-500 dark:text-gray-400 group-hover:text-brand-500'
+                            : 'text-gray-400 group-hover:text-brand-500'
                         }`}
                       />
                       {!isCollapsed && (
