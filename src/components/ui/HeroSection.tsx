@@ -253,13 +253,13 @@ export function HeroSection({ items }: HeroSectionProps) {
         );
       })}
 
-      {/* Gradient Overlays */}
-      <div className='absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent' />
-      <div className='absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/40 to-transparent' />
+      {/* Gradient Overlays - pointer-events-none 让点击可以穿透 */}
+      <div className='absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent pointer-events-none' />
+      <div className='absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/40 to-transparent pointer-events-none' />
 
       {/* Content */}
-      <div className='absolute inset-0 flex items-end pb-20 md:pb-30'>
-        <div className='container mx-auto px-4 md:px-8'>
+      <div className='absolute inset-0 flex items-end pb-20 md:pb-30 pointer-events-none'>
+        <div className='container mx-auto px-4 md:px-8 pointer-events-auto'>
           <div className='max-w-2xl space-y-4 md:space-y-6'>
             {/* Category Tag */}
             {currentItem.type_name && (
