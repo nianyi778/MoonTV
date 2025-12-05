@@ -404,7 +404,8 @@ if (typeof window !== 'undefined') {
 
 // ---- 工具函数 ----
 /**
- * 通用的 fetch 函数，处理 401 状态码自动跳转登录
+ * 通用的 fetch 函数，处理错误
+ * 注意：不再自动重定向到登录页面，未登录用户可以正常使用本地存储
  */
 async function fetchWithAuth(
   url: string,
@@ -412,14 +413,7 @@ async function fetchWithAuth(
 ): Promise<Response> {
   const res = await fetch(url, options);
   if (!res.ok) {
-    // 如果是 401 未授权，跳转到登录页面
-    if (res.status === 401) {
-      const currentUrl = window.location.pathname + window.location.search;
-      const loginUrl = new URL('/login', window.location.origin);
-      loginUrl.searchParams.set('redirect', currentUrl);
-      window.location.href = loginUrl.toString();
-      throw new Error('用户未授权，已跳转到登录页面');
-    }
+    // 401 未授权时不再强制跳转，而是抛出错误让调用方处理
     throw new Error(`请求 ${url} 失败: ${res.status}`);
   }
   return res;

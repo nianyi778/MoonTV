@@ -19,8 +19,9 @@ export async function GET(request: NextRequest) {
   try {
     // 从 cookie 获取用户信息
     const authInfo = getAuthInfoFromCookie(request);
+    // 未登录时返回空数据，不再强制要求登录
     if (!authInfo || !authInfo.username) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({}, { status: 200 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -59,8 +60,9 @@ export async function POST(request: NextRequest) {
   try {
     // 从 cookie 获取用户信息
     const authInfo = getAuthInfoFromCookie(request);
+    // 未登录时静默返回成功，数据会保存在本地
     if (!authInfo || !authInfo.username) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: true, local: true }, { status: 200 });
     }
 
     const body = await request.json();
@@ -116,8 +118,9 @@ export async function DELETE(request: NextRequest) {
   try {
     // 从 cookie 获取用户信息
     const authInfo = getAuthInfoFromCookie(request);
+    // 未登录时静默返回成功
     if (!authInfo || !authInfo.username) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: true, local: true }, { status: 200 });
     }
 
     const username = authInfo.username;
