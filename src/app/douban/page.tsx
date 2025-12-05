@@ -12,8 +12,9 @@ import { DoubanItem, DoubanResult } from '@/lib/types';
 import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
 import DoubanCustomSelector from '@/components/DoubanCustomSelector';
 import DoubanSelector from '@/components/DoubanSelector';
-import PageLayout from '@/components/PageLayout';
-import VideoCard from '@/components/VideoCard';
+import MobileNav from '@/components/MobileNav';
+import MovieCard from '@/components/MovieCard';
+import TopNav from '@/components/TopNav';
 
 function DoubanPageClient() {
   const searchParams = useSearchParams();
@@ -365,110 +366,112 @@ function DoubanPageClient() {
       : '自定义';
   };
 
-  const getActivePath = () => {
-    const params = new URLSearchParams();
-    if (type) params.set('type', type);
-
-    const queryString = params.toString();
-    const activePath = `/douban${queryString ? `?${queryString}` : ''}`;
-    return activePath;
-  };
-
   return (
-    <PageLayout activePath={getActivePath()}>
-      <div className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible'>
-        {/* 页面标题和选择器 */}
-        <div className='mb-6 sm:mb-8 space-y-4 sm:space-y-6'>
-          {/* 页面标题 */}
-          <div>
-            <h1 className='text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2 dark:text-gray-200'>
-              {getPageTitle()}
-            </h1>
-            <p className='text-sm sm:text-base text-gray-600 dark:text-gray-400'>
-              来自豆瓣的精选内容
-            </p>
+    <div className='min-h-screen bg-[#0a0a0a]'>
+      <TopNav transparent={false} />
+
+      <main className='pt-24 pb-24 md:pb-12'>
+        <div className='px-[5%]'>
+          {/* 页面标题和选择器 */}
+          <div className='mb-8 space-y-6'>
+            {/* 页面标题 */}
+            <div>
+              <h1 className='text-2xl sm:text-3xl font-bold text-white mb-2'>
+                {getPageTitle()}
+              </h1>
+              <p className='text-sm sm:text-base text-gray-500'>
+                来自豆瓣的精选内容
+              </p>
+            </div>
+
+            {/* 选择器组件 */}
+            {type !== 'custom' ? (
+              <div className='bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10'>
+                <DoubanSelector
+                  type={type as 'movie' | 'tv' | 'show'}
+                  primarySelection={primarySelection}
+                  secondarySelection={secondarySelection}
+                  onPrimaryChange={handlePrimaryChange}
+                  onSecondaryChange={handleSecondaryChange}
+                />
+              </div>
+            ) : (
+              <div className='bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10'>
+                <DoubanCustomSelector
+                  customCategories={customCategories}
+                  primarySelection={primarySelection}
+                  secondarySelection={secondarySelection}
+                  onPrimaryChange={handlePrimaryChange}
+                  onSecondaryChange={handleSecondaryChange}
+                />
+              </div>
+            )}
           </div>
 
-          {/* 选择器组件 */}
-          {type !== 'custom' ? (
-            <div className='bg-white/60 dark:bg-gray-800/40 rounded-2xl p-4 sm:p-6 border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm'>
-              <DoubanSelector
-                type={type as 'movie' | 'tv' | 'show'}
-                primarySelection={primarySelection}
-                secondarySelection={secondarySelection}
-                onPrimaryChange={handlePrimaryChange}
-                onSecondaryChange={handleSecondaryChange}
-              />
+          {/* 内容展示区域 */}
+          <div className='mt-8'>
+            {/* 内容网格 */}
+            <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-4 md:gap-5'>
+              {loading || !selectorsReady
+                ? // 显示骨架屏
+                  skeletonData.map((index) => (
+                    <DoubanCardSkeleton key={index} />
+                  ))
+                : // 显示实际数据
+                  doubanData.map((item, index) => (
+                    <div key={`${item.title}-${index}`}>
+                      <MovieCard
+                        from='douban'
+                        title={item.title}
+                        poster={item.poster}
+                        douban_id={item.id}
+                        rate={item.rate}
+                        year={item.year}
+                        type={type === 'movie' ? 'movie' : 'tv'}
+                      />
+                    </div>
+                  ))}
             </div>
-          ) : (
-            <div className='bg-white/60 dark:bg-gray-800/40 rounded-2xl p-4 sm:p-6 border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm'>
-              <DoubanCustomSelector
-                customCategories={customCategories}
-                primarySelection={primarySelection}
-                secondarySelection={secondarySelection}
-                onPrimaryChange={handlePrimaryChange}
-                onSecondaryChange={handleSecondaryChange}
-              />
-            </div>
-          )}
-        </div>
 
-        {/* 内容展示区域 */}
-        <div className='max-w-[95%] mx-auto mt-8 overflow-visible'>
-          {/* 内容网格 */}
-          <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-12 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-x-8 sm:gap-y-20'>
-            {loading || !selectorsReady
-              ? // 显示骨架屏
-                skeletonData.map((index) => <DoubanCardSkeleton key={index} />)
-              : // 显示实际数据
-                doubanData.map((item, index) => (
-                  <div key={`${item.title}-${index}`} className='w-full'>
-                    <VideoCard
-                      from='douban'
-                      title={item.title}
-                      poster={item.poster}
-                      douban_id={item.id}
-                      rate={item.rate}
-                      year={item.year}
-                      type={type === 'movie' ? 'movie' : ''} // 电影类型严格控制，tv 不控
-                    />
+            {/* 加载更多指示器 */}
+            {hasMore && !loading && (
+              <div
+                ref={(el) => {
+                  if (el && el.offsetParent !== null) {
+                    (
+                      loadingRef as React.MutableRefObject<HTMLDivElement | null>
+                    ).current = el;
+                  }
+                }}
+                className='flex justify-center mt-12 py-8'
+              >
+                {isLoadingMore && (
+                  <div className='flex items-center gap-3'>
+                    <div className='w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin' />
+                    <span className='text-gray-500'>加载中...</span>
                   </div>
-                ))}
+                )}
+              </div>
+            )}
+
+            {/* 没有更多数据提示 */}
+            {!hasMore && doubanData.length > 0 && (
+              <div className='text-center text-gray-600 py-8'>
+                已加载全部内容
+              </div>
+            )}
+
+            {/* 空状态 */}
+            {!loading && doubanData.length === 0 && (
+              <div className='text-center text-gray-600 py-8'>暂无相关内容</div>
+            )}
           </div>
-
-          {/* 加载更多指示器 */}
-          {hasMore && !loading && (
-            <div
-              ref={(el) => {
-                if (el && el.offsetParent !== null) {
-                  (
-                    loadingRef as React.MutableRefObject<HTMLDivElement | null>
-                  ).current = el;
-                }
-              }}
-              className='flex justify-center mt-12 py-8'
-            >
-              {isLoadingMore && (
-                <div className='flex items-center gap-2'>
-                  <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-green-500'></div>
-                  <span className='text-gray-600'>加载中...</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 没有更多数据提示 */}
-          {!hasMore && doubanData.length > 0 && (
-            <div className='text-center text-gray-500 py-8'>已加载全部内容</div>
-          )}
-
-          {/* 空状态 */}
-          {!loading && doubanData.length === 0 && (
-            <div className='text-center text-gray-500 py-8'>暂无相关内容</div>
-          )}
         </div>
-      </div>
-    </PageLayout>
+      </main>
+
+      {/* 移动端底部导航 */}
+      <MobileNav />
+    </div>
   );
 }
 

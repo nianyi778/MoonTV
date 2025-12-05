@@ -3,17 +3,17 @@
 @tailwind utilities;
 
 /* 导入设计系统 */
-@import '../styles/design-system.css';
+@import '../styles/cinestream.css';
 
 @layer base {
   :root {
-    --foreground-rgb: 17, 24, 39;
-    --background: #f9fafb;
+    --foreground-rgb: 255, 255, 255;
+    --background: #0a0a0a;
   }
 
   .dark {
-    --foreground-rgb: 249, 250, 251;
-    --background: #0f172a;
+    --foreground-rgb: 255, 255, 255;
+    --background: #0a0a0a;
   }
 }
 
@@ -59,15 +59,10 @@ body {
   transition: background-color 0.3s ease;
 }
 
-/* 浅色模式背景 - 现代渐变 */
-html:not(.dark) body {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
-  background-attachment: fixed;
-}
-
-/* 深色模式背景 */
+/* 统一深色背景 */
+html body,
 html.dark body {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  background: #0a0a0a;
   background-attachment: fixed;
 }
 
