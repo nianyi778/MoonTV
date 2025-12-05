@@ -1,0 +1,254 @@
+/* Vidstack Player 自定义样式 */
+
+/* 基础主题色 - 使用绿色主题 */
+.vidstack-player {
+  --media-brand: #22c55e;
+  --media-focus-ring-color: #22c55e;
+  --media-focus-ring: 0 0 0 3px var(--media-focus-ring-color);
+}
+
+/* 播放器容器 */
+.vidstack-player [data-media-player] {
+  --media-controls-color: #ffffff;
+  background-color: #000000;
+}
+
+/* 控制栏样式优化 */
+.vidstack-player .vds-controls {
+  padding: 12px;
+}
+
+/* 按钮样式 */
+.vidstack-player .vds-button {
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.vidstack-player .vds-button:hover {
+  color: #22c55e;
+  transform: scale(1.1);
+}
+
+/* 进度条样式 */
+.vidstack-player .vds-time-slider {
+  --media-slider-height: 5px;
+  --media-slider-thumb-size: 14px;
+  --media-slider-track-bg: rgba(255, 255, 255, 0.3);
+  --media-slider-track-fill-bg: #22c55e;
+  --media-slider-preview-bg: rgba(0, 0, 0, 0.9);
+}
+
+.vidstack-player .vds-time-slider:hover {
+  --media-slider-height: 7px;
+  --media-slider-thumb-size: 16px;
+}
+
+/* 音量滑块 */
+.vidstack-player .vds-volume-slider {
+  --media-slider-height: 4px;
+  --media-slider-thumb-size: 12px;
+  --media-slider-track-fill-bg: #22c55e;
+}
+
+/* 菜单样式 */
+.vidstack-player .vds-menu {
+  --media-menu-bg: rgba(0, 0, 0, 0.95);
+  --media-menu-border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.vidstack-player .vds-menu-item {
+  transition: background-color 0.2s ease;
+}
+
+.vidstack-player .vds-menu-item:hover {
+  background-color: rgba(34, 197, 94, 0.2);
+}
+
+.vidstack-player .vds-menu-item[data-focus] {
+  background-color: rgba(34, 197, 94, 0.3);
+}
+
+/* 加载动画 */
+.vidstack-player .vds-buffering-indicator {
+  --media-buffering-indicator-color: #22c55e;
+}
+
+/* 海报样式 */
+.vidstack-player .vds-poster {
+  object-fit: cover;
+}
+
+/* 时间显示 */
+.vidstack-player .vds-time {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-size: 13px;
+}
+
+/* 章节标记 */
+.vidstack-player .vds-chapter-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ==================== iPad 和平板优化 ==================== */
+
+/* 针对触屏设备的优化 */
+@media (pointer: coarse) {
+  /* 更大的触控区域 */
+  .vidstack-player .vds-button {
+    min-width: 48px;
+    min-height: 48px;
+    padding: 12px;
+  }
+
+  /* 更大的进度条 */
+  .vidstack-player .vds-time-slider {
+    --media-slider-height: 8px;
+    --media-slider-thumb-size: 20px;
+    padding: 16px 0;
+  }
+
+  .vidstack-player .vds-time-slider:hover {
+    --media-slider-height: 10px;
+    --media-slider-thumb-size: 24px;
+  }
+
+  /* 更大的音量滑块 */
+  .vidstack-player .vds-volume-slider {
+    --media-slider-height: 6px;
+    --media-slider-thumb-size: 18px;
+  }
+
+  /* 控制栏增加内边距 */
+  .vidstack-player .vds-controls {
+    padding: 16px 20px;
+  }
+
+  /* 菜单项更大的点击区域 */
+  .vidstack-player .vds-menu-item {
+    padding: 14px 18px;
+    font-size: 16px;
+  }
+}
+
+/* iPad 横屏 */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .vidstack-player .vds-controls {
+    padding: 20px 24px;
+  }
+
+  .vidstack-player .vds-button {
+    min-width: 52px;
+    min-height: 52px;
+  }
+}
+
+/* iPad 竖屏 */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .vidstack-player .vds-controls {
+    padding: 16px 20px;
+  }
+}
+
+/* ==================== 手势提示 ==================== */
+
+/* 快进/快退手势提示 */
+.vidstack-player .vds-gesture-indicator {
+  font-size: 48px;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* ==================== 全屏模式优化 ==================== */
+
+.vidstack-player[data-fullscreen] .vds-controls {
+  padding: 24px 32px;
+}
+
+.vidstack-player[data-fullscreen] .vds-button {
+  transform: scale(1.1);
+}
+
+.vidstack-player[data-fullscreen] .vds-time-slider {
+  --media-slider-height: 8px;
+  --media-slider-thumb-size: 18px;
+}
+
+/* ==================== 画中画模式 ==================== */
+
+.vidstack-player[data-pip] .vds-controls {
+  padding: 8px;
+}
+
+.vidstack-player[data-pip] .vds-button {
+  min-width: 32px;
+  min-height: 32px;
+}
+
+/* ==================== 暗色模式 ==================== */
+
+.dark .vidstack-player {
+  --media-brand: #22c55e;
+}
+
+/* ==================== 移动端优化 ==================== */
+
+@media (max-width: 640px) {
+  .vidstack-player .vds-controls {
+    padding: 10px 12px;
+  }
+
+  .vidstack-player .vds-time {
+    font-size: 11px;
+  }
+
+  .vidstack-player .vds-time-slider {
+    --media-slider-height: 4px;
+    --media-slider-thumb-size: 14px;
+  }
+}
+
+/* ==================== 动画效果 ==================== */
+
+/* 控制栏显示/隐藏动画 */
+.vidstack-player .vds-controls {
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* 播放按钮动画 */
+.vidstack-player .vds-play-button {
+  transition: transform 0.2s ease;
+}
+
+.vidstack-player .vds-play-button:active {
+  transform: scale(0.95);
+}
+
+/* 进度条拖动时的动画 */
+.vidstack-player .vds-slider-thumb {
+  transition: transform 0.1s ease;
+}
+
+.vidstack-player .vds-slider:active .vds-slider-thumb {
+  transform: scale(1.2);
+}
+
+/* ==================== 可访问性 ==================== */
+
+/* 焦点状态 */
+.vidstack-player .vds-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.5);
+  border-radius: 8px;
+}
+
+.vidstack-player .vds-slider:focus-visible {
+  outline: none;
+}
+
+.vidstack-player .vds-slider:focus-visible .vds-slider-track {
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.5);
+}

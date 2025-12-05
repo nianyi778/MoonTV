@@ -2,23 +2,19 @@
 
 'use client';
 
-import Artplayer from 'artplayer';
-import Hls from 'hls.js';
 import { Heart } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   deleteFavorite,
   deletePlayRecord,
-  deleteSkipConfig,
   generateStorageKey,
   getAllPlayRecords,
   getSkipConfig,
   isFavorited,
   saveFavorite,
   savePlayRecord,
-  saveSkipConfig,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { SearchResult } from '@/lib/types';
@@ -26,13 +22,7 @@ import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 
 import EpisodeSelector from '@/components/EpisodeSelector';
 import PageLayout from '@/components/PageLayout';
-
-// 扩展 HTMLVideoElement 类型以支持 hls 属性
-declare global {
-  interface HTMLVideoElement {
-    hls?: any;
-  }
-}
+import VidstackPlayer, { VidstackPlayerRef } from '@/components/VidstackPlayer';
 
 function PlayPageClient() {
   const router = useRouter();
@@ -72,21 +62,14 @@ function PlayPageClient() {
     skipConfig.outro_time,
   ]);
 
-  // 跳过检查的时间间隔控制
-  const lastSkipCheckRef = useRef(0);
-
   // 去广告开关（从 localStorage 继承，默认 true）
-  const [blockAdEnabled, setBlockAdEnabled] = useState<boolean>(() => {
+  const [blockAdEnabled] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const v = localStorage.getItem('enable_blockad');
       if (v !== null) return v === 'true';
     }
     return true;
   });
-  const blockAdEnabledRef = useRef(blockAdEnabled);
-  useEffect(() => {
-    blockAdEnabledRef.current = blockAdEnabled;
-  }, [blockAdEnabled]);
 
   // 视频基本信息
   const [videoTitle, setVideoTitle] = useState(searchParams.get('title') || '');
@@ -145,10 +128,6 @@ function PlayPageClient() {
 
   // 用于记录是否需要在播放器 ready 后跳转到指定进度
   const resumeTimeRef = useRef<number | null>(null);
-  // 上次使用的音量，默认 0.7
-  const lastVolumeRef = useRef<number>(0.7);
-  // 上次使用的播放速率，默认 1.0
-  const lastPlaybackRateRef = useRef<number>(1.0);
 
   // 换源相关状态
   const [availableSources, setAvailableSources] = useState<SearchResult[]>([]);
@@ -191,8 +170,7 @@ function PlayPageClient() {
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
 
-  const artPlayerRef = useRef<any>(null);
-  const artRef = useRef<HTMLDivElement | null>(null);
+  const playerRef = useRef<VidstackPlayerRef>(null);
 
   // -----------------------------------------------------------------------------
   // 工具函数（Utils）
@@ -416,178 +394,6 @@ function PlayPageClient() {
     }
   };
 
-  const ensureVideoSource = (video: HTMLVideoElement | null, url: string) => {
-    if (!video || !url) return;
-    const sources = Array.from(video.getElementsByTagName('source'));
-    const existed = sources.some((s) => s.src === url);
-    if (!existed) {
-      // 移除旧的 source，保持唯一
-      sources.forEach((s) => s.remove());
-      const sourceEl = document.createElement('source');
-      sourceEl.src = url;
-      video.appendChild(sourceEl);
-    }
-
-    // 始终允许远程播放（AirPlay / Cast）
-    video.disableRemotePlayback = false;
-    // 如果曾经有禁用属性，移除之
-    if (video.hasAttribute('disableRemotePlayback')) {
-      video.removeAttribute('disableRemotePlayback');
-    }
-  };
-
-  // 去广告相关函数
-  function filterAdsFromM3U8(m3u8Content: string): string {
-    if (!m3u8Content) return '';
-
-    // 按行分割M3U8内容
-    const lines = m3u8Content.split('\n');
-    const filteredLines = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
-      // 只过滤#EXT-X-DISCONTINUITY标识
-      if (!line.includes('#EXT-X-DISCONTINUITY')) {
-        filteredLines.push(line);
-      }
-    }
-
-    return filteredLines.join('\n');
-  }
-
-  // 跳过片头片尾配置相关函数
-  const handleSkipConfigChange = async (newConfig: {
-    enable: boolean;
-    intro_time: number;
-    outro_time: number;
-  }) => {
-    if (!currentSourceRef.current || !currentIdRef.current) return;
-
-    try {
-      setSkipConfig(newConfig);
-      if (!newConfig.enable && !newConfig.intro_time && !newConfig.outro_time) {
-        await deleteSkipConfig(currentSourceRef.current, currentIdRef.current);
-        artPlayerRef.current.setting.update({
-          name: '跳过片头片尾',
-          html: '跳过片头片尾',
-          switch: skipConfigRef.current.enable,
-          onSwitch: function (item: any) {
-            const newConfig = {
-              ...skipConfigRef.current,
-              enable: !item.switch,
-            };
-            handleSkipConfigChange(newConfig);
-            return !item.switch;
-          },
-        });
-        artPlayerRef.current.setting.update({
-          name: '设置片头',
-          html: '设置片头',
-          icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="12" r="2" fill="#ffffff"/><path d="M9 12L17 12" stroke="#ffffff" stroke-width="2"/><path d="M17 6L17 18" stroke="#ffffff" stroke-width="2"/></svg>',
-          tooltip:
-            skipConfigRef.current.intro_time === 0
-              ? '设置片头时间'
-              : `${formatTime(skipConfigRef.current.intro_time)}`,
-          onClick: function () {
-            const currentTime = artPlayerRef.current?.currentTime || 0;
-            if (currentTime > 0) {
-              const newConfig = {
-                ...skipConfigRef.current,
-                intro_time: currentTime,
-              };
-              handleSkipConfigChange(newConfig);
-              return `${formatTime(currentTime)}`;
-            }
-          },
-        });
-        artPlayerRef.current.setting.update({
-          name: '设置片尾',
-          html: '设置片尾',
-          icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 6L7 18" stroke="#ffffff" stroke-width="2"/><path d="M7 12L15 12" stroke="#ffffff" stroke-width="2"/><circle cx="19" cy="12" r="2" fill="#ffffff"/></svg>',
-          tooltip:
-            skipConfigRef.current.outro_time >= 0
-              ? '设置片尾时间'
-              : `-${formatTime(-skipConfigRef.current.outro_time)}`,
-          onClick: function () {
-            const outroTime =
-              -(
-                artPlayerRef.current?.duration -
-                artPlayerRef.current?.currentTime
-              ) || 0;
-            if (outroTime < 0) {
-              const newConfig = {
-                ...skipConfigRef.current,
-                outro_time: outroTime,
-              };
-              handleSkipConfigChange(newConfig);
-              return `-${formatTime(-outroTime)}`;
-            }
-          },
-        });
-      } else {
-        await saveSkipConfig(
-          currentSourceRef.current,
-          currentIdRef.current,
-          newConfig
-        );
-      }
-      console.log('跳过片头片尾配置已保存:', newConfig);
-    } catch (err) {
-      console.error('保存跳过片头片尾配置失败:', err);
-    }
-  };
-
-  const formatTime = (seconds: number): string => {
-    if (seconds === 0) return '00:00';
-
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = Math.round(seconds % 60);
-
-    if (hours === 0) {
-      // 不到一小时，格式为 00:00
-      return `${minutes.toString().padStart(2, '0')}:${remainingSeconds
-        .toString()
-        .padStart(2, '0')}`;
-    } else {
-      // 超过一小时，格式为 00:00:00
-      return `${hours.toString().padStart(2, '0')}:${minutes
-        .toString()
-        .padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-    }
-  };
-
-  class CustomHlsJsLoader extends Hls.DefaultConfig.loader {
-    constructor(config: any) {
-      super(config);
-      const load = this.load.bind(this);
-      this.load = function (context: any, config: any, callbacks: any) {
-        // 拦截manifest和level请求
-        if (
-          (context as any).type === 'manifest' ||
-          (context as any).type === 'level'
-        ) {
-          const onSuccess = callbacks.onSuccess;
-          callbacks.onSuccess = function (
-            response: any,
-            stats: any,
-            context: any
-          ) {
-            // 如果是m3u8文件，处理内容以移除广告分段
-            if (response.data && typeof response.data === 'string') {
-              // 过滤掉广告段 - 实现更精确的广告过滤逻辑
-              response.data = filterAdsFromM3U8(response.data);
-            }
-            return onSuccess(response, stats, context, null);
-          };
-        }
-        // 执行原始load方法
-        load(context, config, callbacks);
-      };
-    }
-  }
-
   // 当集数索引变化时自动更新视频地址
   useEffect(() => {
     updateVideoUrl(detail, currentEpisodeIndex);
@@ -803,7 +609,7 @@ function PlayPageClient() {
       setIsVideoLoading(true);
 
       // 记录当前播放进度（仅在同一集数切换时恢复）
-      const currentPlayTime = artPlayerRef.current?.currentTime || 0;
+      const currentPlayTime = playerRef.current?.getCurrentTime() || 0;
       console.log('换源前当前播放时间:', currentPlayTime);
 
       // 清除前一个历史记录
@@ -816,19 +622,6 @@ function PlayPageClient() {
           console.log('已清除前一个播放记录');
         } catch (err) {
           console.error('清除播放记录失败:', err);
-        }
-      }
-
-      // 清除并设置下一个跳过片头片尾配置
-      if (currentSourceRef.current && currentIdRef.current) {
-        try {
-          await deleteSkipConfig(
-            currentSourceRef.current,
-            currentIdRef.current
-          );
-          await saveSkipConfig(newSource, newId, skipConfigRef.current);
-        } catch (err) {
-          console.error('清除跳过片头片尾配置失败:', err);
         }
       }
 
@@ -893,9 +686,7 @@ function PlayPageClient() {
   const handleEpisodeChange = (episodeNumber: number) => {
     if (episodeNumber >= 0 && episodeNumber < totalEpisodes) {
       // 在更换集数前保存当前播放进度
-      if (artPlayerRef.current && artPlayerRef.current.paused) {
-        saveCurrentPlayProgress();
-      }
+      saveCurrentPlayProgress();
       setCurrentEpisodeIndex(episodeNumber);
     }
   };
@@ -904,9 +695,7 @@ function PlayPageClient() {
     const d = detailRef.current;
     const idx = currentEpisodeIndexRef.current;
     if (d && d.episodes && idx > 0) {
-      if (artPlayerRef.current && !artPlayerRef.current.paused) {
-        saveCurrentPlayProgress();
-      }
+      saveCurrentPlayProgress();
       setCurrentEpisodeIndex(idx - 1);
     }
   };
@@ -915,9 +704,7 @@ function PlayPageClient() {
     const d = detailRef.current;
     const idx = currentEpisodeIndexRef.current;
     if (d && d.episodes && idx < d.episodes.length - 1) {
-      if (artPlayerRef.current && !artPlayerRef.current.paused) {
-        saveCurrentPlayProgress();
-      }
+      saveCurrentPlayProgress();
       setCurrentEpisodeIndex(idx + 1);
     }
   };
@@ -926,7 +713,7 @@ function PlayPageClient() {
   // 键盘快捷键
   // ---------------------------------------------------------------------------
   // 处理全局快捷键
-  const handleKeyboardShortcuts = (e: KeyboardEvent) => {
+  const handleKeyboardShortcuts = useCallback((e: KeyboardEvent) => {
     // 忽略输入框中的按键事件
     if (
       (e.target as HTMLElement).tagName === 'INPUT' ||
@@ -952,73 +739,53 @@ function PlayPageClient() {
       }
     }
 
-    // 左箭头 = 快退
+    // 左箭头 = 快退 (Vidstack 内部已处理，此处保留以确保一致性)
     if (!e.altKey && e.key === 'ArrowLeft') {
-      if (artPlayerRef.current && artPlayerRef.current.currentTime > 5) {
-        artPlayerRef.current.currentTime -= 10;
-        e.preventDefault();
+      if (playerRef.current) {
+        const currentTime = playerRef.current.getCurrentTime();
+        if (currentTime > 10) {
+          playerRef.current.seek(currentTime - 10);
+          e.preventDefault();
+        }
       }
     }
 
     // 右箭头 = 快进
     if (!e.altKey && e.key === 'ArrowRight') {
-      if (
-        artPlayerRef.current &&
-        artPlayerRef.current.currentTime < artPlayerRef.current.duration - 5
-      ) {
-        artPlayerRef.current.currentTime += 10;
-        e.preventDefault();
-      }
-    }
-
-    // 上箭头 = 音量+
-    if (e.key === 'ArrowUp') {
-      if (artPlayerRef.current && artPlayerRef.current.volume < 1) {
-        artPlayerRef.current.volume =
-          Math.round((artPlayerRef.current.volume + 0.1) * 10) / 10;
-        artPlayerRef.current.notice.show = `音量: ${Math.round(
-          artPlayerRef.current.volume * 100
-        )}`;
-        e.preventDefault();
-      }
-    }
-
-    // 下箭头 = 音量-
-    if (e.key === 'ArrowDown') {
-      if (artPlayerRef.current && artPlayerRef.current.volume > 0) {
-        artPlayerRef.current.volume =
-          Math.round((artPlayerRef.current.volume - 0.1) * 10) / 10;
-        artPlayerRef.current.notice.show = `音量: ${Math.round(
-          artPlayerRef.current.volume * 100
-        )}`;
-        e.preventDefault();
+      if (playerRef.current) {
+        const currentTime = playerRef.current.getCurrentTime();
+        const duration = playerRef.current.getDuration();
+        if (currentTime < duration - 10) {
+          playerRef.current.seek(currentTime + 10);
+          e.preventDefault();
+        }
       }
     }
 
     // 空格 = 播放/暂停
     if (e.key === ' ') {
-      if (artPlayerRef.current) {
-        artPlayerRef.current.toggle();
+      if (playerRef.current) {
+        playerRef.current.toggle();
         e.preventDefault();
       }
     }
 
     // f 键 = 切换全屏
     if (e.key === 'f' || e.key === 'F') {
-      if (artPlayerRef.current) {
-        artPlayerRef.current.fullscreen = !artPlayerRef.current.fullscreen;
+      if (playerRef.current) {
+        playerRef.current.toggleFullscreen();
         e.preventDefault();
       }
     }
-  };
+  }, []);
 
   // ---------------------------------------------------------------------------
   // 播放记录相关
   // ---------------------------------------------------------------------------
   // 保存播放进度
-  const saveCurrentPlayProgress = async () => {
+  const saveCurrentPlayProgress = useCallback(async () => {
     if (
-      !artPlayerRef.current ||
+      !playerRef.current ||
       !currentSourceRef.current ||
       !currentIdRef.current ||
       !videoTitleRef.current ||
@@ -1027,9 +794,8 @@ function PlayPageClient() {
       return;
     }
 
-    const player = artPlayerRef.current;
-    const currentTime = player.currentTime || 0;
-    const duration = player.duration || 0;
+    const currentTime = playerRef.current.getCurrentTime() || 0;
+    const duration = playerRef.current.getDuration() || 0;
 
     // 如果播放时间太短（少于5秒）或者视频时长无效，不保存
     if (currentTime < 1 || !duration) {
@@ -1060,7 +826,7 @@ function PlayPageClient() {
     } catch (err) {
       console.error('保存播放进度失败:', err);
     }
-  };
+  }, [searchTitle]);
 
   useEffect(() => {
     // 页面即将卸载时保存播放进度
@@ -1084,7 +850,7 @@ function PlayPageClient() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [currentEpisodeIndex, detail, artPlayerRef.current]);
+  }, [saveCurrentPlayProgress]);
 
   // 清理定时器
   useEffect(() => {
@@ -1160,416 +926,47 @@ function PlayPageClient() {
     }
   };
 
-  useEffect(() => {
-    if (
-      !Artplayer ||
-      !Hls ||
-      !videoUrl ||
-      loading ||
-      currentEpisodeIndex === null ||
-      !artRef.current
-    ) {
-      return;
-    }
-
-    // 确保选集索引有效
-    if (
-      !detail ||
-      !detail.episodes ||
-      currentEpisodeIndex >= detail.episodes.length ||
-      currentEpisodeIndex < 0
-    ) {
-      setError(`选集索引无效，当前共 ${totalEpisodes} 集`);
-      return;
-    }
-
-    if (!videoUrl) {
-      setError('视频地址无效');
-      return;
-    }
-    console.log(videoUrl);
-
-    // 检测是否为WebKit浏览器
-    const isWebkit =
-      typeof window !== 'undefined' &&
-      typeof (window as any).webkitConvertPointFromNodeToPage === 'function';
-
-    // 非WebKit浏览器且播放器已存在，使用switch方法切换
-    if (!isWebkit && artPlayerRef.current) {
-      artPlayerRef.current.switch = videoUrl;
-      artPlayerRef.current.title = `${videoTitle} - 第${
-        currentEpisodeIndex + 1
-      }集`;
-      artPlayerRef.current.poster = videoCover;
-      if (artPlayerRef.current?.video) {
-        ensureVideoSource(
-          artPlayerRef.current.video as HTMLVideoElement,
-          videoUrl
-        );
+  // Vidstack 播放器事件处理
+  const handlePlayerTimeUpdate = useCallback(
+    (_currentTime: number, _duration: number) => {
+      const now = Date.now();
+      let interval = 5000;
+      if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
+        interval = 10000;
       }
-      return;
-    }
-
-    // WebKit浏览器或首次创建：销毁之前的播放器实例并创建新的
-    if (artPlayerRef.current) {
-      if (artPlayerRef.current.video && artPlayerRef.current.video.hls) {
-        artPlayerRef.current.video.hls.destroy();
+      if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'upstash') {
+        interval = 20000;
       }
-      // 销毁播放器实例
-      artPlayerRef.current.destroy();
-      artPlayerRef.current = null;
-    }
-
-    try {
-      // 创建新的播放器实例
-      Artplayer.PLAYBACK_RATE = [0.5, 0.75, 1, 1.25, 1.5, 2, 3];
-      Artplayer.USE_RAF = true;
-
-      artPlayerRef.current = new Artplayer({
-        container: artRef.current,
-        url: videoUrl,
-        poster: videoCover,
-        volume: 0.7,
-        isLive: false,
-        muted: false,
-        autoplay: true,
-        pip: true,
-        autoSize: false,
-        autoMini: false,
-        screenshot: false,
-        setting: true,
-        loop: false,
-        flip: false,
-        playbackRate: true,
-        aspectRatio: false,
-        fullscreen: true,
-        fullscreenWeb: true,
-        subtitleOffset: false,
-        miniProgressBar: false,
-        mutex: true,
-        playsInline: true,
-        autoPlayback: false,
-        airplay: true,
-        theme: '#22c55e',
-        lang: 'zh-cn',
-        hotkey: false,
-        fastForward: true,
-        autoOrientation: true,
-        lock: true,
-        moreVideoAttr: {
-          crossOrigin: 'anonymous',
-        },
-        // HLS 支持配置
-        customType: {
-          m3u8: function (video: HTMLVideoElement, url: string) {
-            if (!Hls) {
-              console.error('HLS.js 未加载');
-              return;
-            }
-
-            if (video.hls) {
-              video.hls.destroy();
-            }
-            const hls = new Hls({
-              debug: false, // 关闭日志
-              enableWorker: true, // WebWorker 解码，降低主线程压力
-              lowLatencyMode: true, // 开启低延迟 LL-HLS
-
-              /* 缓冲/内存相关 */
-              maxBufferLength: 30, // 前向缓冲最大 30s，过大容易导致高延迟
-              backBufferLength: 30, // 仅保留 30s 已播放内容，避免内存占用
-              maxBufferSize: 60 * 1000 * 1000, // 约 60MB，超出后触发清理
-
-              /* 自定义loader */
-              loader: blockAdEnabledRef.current
-                ? CustomHlsJsLoader
-                : Hls.DefaultConfig.loader,
-            });
-
-            hls.loadSource(url);
-            hls.attachMedia(video);
-            video.hls = hls;
-
-            ensureVideoSource(video, url);
-
-            hls.on(Hls.Events.ERROR, function (event: any, data: any) {
-              console.error('HLS Error:', event, data);
-              if (data.fatal) {
-                switch (data.type) {
-                  case Hls.ErrorTypes.NETWORK_ERROR:
-                    console.log('网络错误，尝试恢复...');
-                    hls.startLoad();
-                    break;
-                  case Hls.ErrorTypes.MEDIA_ERROR:
-                    console.log('媒体错误，尝试恢复...');
-                    hls.recoverMediaError();
-                    break;
-                  default:
-                    console.log('无法恢复的错误');
-                    hls.destroy();
-                    break;
-                }
-              }
-            });
-          },
-        },
-        icons: {
-          loading:
-            '<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgdmlld0JveD0iMCAwIDUwIDUwIj48cGF0aCBkPSJNMjUuMjUxIDYuNDYxYy0xMC4zMTggMC0xOC42ODMgOC4zNjUtMTguNjgzIDE4LjY4M2g0LjA2OGMwLTguMDcgNi41NDUtMTQuNjE1IDE0LjYxNS0xNC42MTVWNi40NjF6IiBmaWxsPSIjMDA5Njg4Ij48YW5pbWF0ZVRyYW5zZm9ybSBhdHRyaWJ1dGVOYW1lPSJ0cmFuc2Zvcm0iIGF0dHJpYnV0ZVR5cGU9IlhNTCIgZHVyPSIxcyIgZnJvbT0iMCAyNSAyNSIgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiIHRvPSIzNjAgMjUgMjUiIHR5cGU9InJvdGF0ZSIvPjwvcGF0aD48L3N2Zz4=">',
-        },
-        settings: [
-          {
-            html: '去广告',
-            icon: '<text x="50%" y="50%" font-size="20" font-weight="bold" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">AD</text>',
-            tooltip: blockAdEnabled ? '已开启' : '已关闭',
-            onClick() {
-              const newVal = !blockAdEnabled;
-              try {
-                localStorage.setItem('enable_blockad', String(newVal));
-                if (artPlayerRef.current) {
-                  resumeTimeRef.current = artPlayerRef.current.currentTime;
-                  if (
-                    artPlayerRef.current.video &&
-                    artPlayerRef.current.video.hls
-                  ) {
-                    artPlayerRef.current.video.hls.destroy();
-                  }
-                  artPlayerRef.current.destroy();
-                  artPlayerRef.current = null;
-                }
-                setBlockAdEnabled(newVal);
-              } catch (_) {
-                // ignore
-              }
-              return newVal ? '当前开启' : '当前关闭';
-            },
-          },
-          {
-            name: '跳过片头片尾',
-            html: '跳过片头片尾',
-            switch: skipConfigRef.current.enable,
-            onSwitch: function (item) {
-              const newConfig = {
-                ...skipConfigRef.current,
-                enable: !item.switch,
-              };
-              handleSkipConfigChange(newConfig);
-              return !item.switch;
-            },
-          },
-          {
-            html: '删除跳过配置',
-            onClick: function () {
-              handleSkipConfigChange({
-                enable: false,
-                intro_time: 0,
-                outro_time: 0,
-              });
-              return '';
-            },
-          },
-          {
-            name: '设置片头',
-            html: '设置片头',
-            icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="12" r="2" fill="#ffffff"/><path d="M9 12L17 12" stroke="#ffffff" stroke-width="2"/><path d="M17 6L17 18" stroke="#ffffff" stroke-width="2"/></svg>',
-            tooltip:
-              skipConfigRef.current.intro_time === 0
-                ? '设置片头时间'
-                : `${formatTime(skipConfigRef.current.intro_time)}`,
-            onClick: function () {
-              const currentTime = artPlayerRef.current?.currentTime || 0;
-              if (currentTime > 0) {
-                const newConfig = {
-                  ...skipConfigRef.current,
-                  intro_time: currentTime,
-                };
-                handleSkipConfigChange(newConfig);
-                return `${formatTime(currentTime)}`;
-              }
-            },
-          },
-          {
-            name: '设置片尾',
-            html: '设置片尾',
-            icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 6L7 18" stroke="#ffffff" stroke-width="2"/><path d="M7 12L15 12" stroke="#ffffff" stroke-width="2"/><circle cx="19" cy="12" r="2" fill="#ffffff"/></svg>',
-            tooltip:
-              skipConfigRef.current.outro_time >= 0
-                ? '设置片尾时间'
-                : `-${formatTime(-skipConfigRef.current.outro_time)}`,
-            onClick: function () {
-              const outroTime =
-                -(
-                  artPlayerRef.current?.duration -
-                  artPlayerRef.current?.currentTime
-                ) || 0;
-              if (outroTime < 0) {
-                const newConfig = {
-                  ...skipConfigRef.current,
-                  outro_time: outroTime,
-                };
-                handleSkipConfigChange(newConfig);
-                return `-${formatTime(-outroTime)}`;
-              }
-            },
-          },
-        ],
-        // 控制栏配置
-        controls: [
-          {
-            position: 'left',
-            index: 13,
-            html: '<i class="art-icon flex"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" fill="currentColor"/></svg></i>',
-            tooltip: '播放下一集',
-            click: function () {
-              handleNextEpisode();
-            },
-          },
-        ],
-      });
-
-      // 监听播放器事件
-      artPlayerRef.current.on('ready', () => {
-        setError(null);
-      });
-
-      artPlayerRef.current.on('video:volumechange', () => {
-        lastVolumeRef.current = artPlayerRef.current.volume;
-      });
-      artPlayerRef.current.on('video:ratechange', () => {
-        lastPlaybackRateRef.current = artPlayerRef.current.playbackRate;
-      });
-
-      // 监听视频可播放事件，这时恢复播放进度更可靠
-      artPlayerRef.current.on('video:canplay', () => {
-        // 若存在需要恢复的播放进度，则跳转
-        if (resumeTimeRef.current && resumeTimeRef.current > 0) {
-          try {
-            const duration = artPlayerRef.current.duration || 0;
-            let target = resumeTimeRef.current;
-            if (duration && target >= duration - 2) {
-              target = Math.max(0, duration - 5);
-            }
-            artPlayerRef.current.currentTime = target;
-            console.log('成功恢复播放进度到:', resumeTimeRef.current);
-          } catch (err) {
-            console.warn('恢复播放进度失败:', err);
-          }
-        }
-        resumeTimeRef.current = null;
-
-        setTimeout(() => {
-          if (
-            Math.abs(artPlayerRef.current.volume - lastVolumeRef.current) > 0.01
-          ) {
-            artPlayerRef.current.volume = lastVolumeRef.current;
-          }
-          if (
-            Math.abs(
-              artPlayerRef.current.playbackRate - lastPlaybackRateRef.current
-            ) > 0.01 &&
-            isWebkit
-          ) {
-            artPlayerRef.current.playbackRate = lastPlaybackRateRef.current;
-          }
-          artPlayerRef.current.notice.show = '';
-        }, 0);
-
-        // 隐藏换源加载状态
-        setIsVideoLoading(false);
-      });
-
-      // 监听视频时间更新事件，实现跳过片头片尾
-      artPlayerRef.current.on('video:timeupdate', () => {
-        if (!skipConfigRef.current.enable) return;
-
-        const currentTime = artPlayerRef.current.currentTime || 0;
-        const duration = artPlayerRef.current.duration || 0;
-        const now = Date.now();
-
-        // 限制跳过检查频率为1.5秒一次
-        if (now - lastSkipCheckRef.current < 1500) return;
-        lastSkipCheckRef.current = now;
-
-        // 跳过片头
-        if (
-          skipConfigRef.current.intro_time > 0 &&
-          currentTime < skipConfigRef.current.intro_time
-        ) {
-          artPlayerRef.current.currentTime = skipConfigRef.current.intro_time;
-          artPlayerRef.current.notice.show = `已跳过片头 (${formatTime(
-            skipConfigRef.current.intro_time
-          )})`;
-        }
-
-        // 跳过片尾
-        if (
-          skipConfigRef.current.outro_time < 0 &&
-          duration > 0 &&
-          currentTime >
-            artPlayerRef.current.duration + skipConfigRef.current.outro_time
-        ) {
-          if (
-            currentEpisodeIndexRef.current <
-            (detailRef.current?.episodes?.length || 1) - 1
-          ) {
-            handleNextEpisode();
-          } else {
-            artPlayerRef.current.pause();
-          }
-          artPlayerRef.current.notice.show = `已跳过片尾 (${formatTime(
-            skipConfigRef.current.outro_time
-          )})`;
-        }
-      });
-
-      artPlayerRef.current.on('error', (err: any) => {
-        console.error('播放器错误:', err);
-        if (artPlayerRef.current.currentTime > 0) {
-          return;
-        }
-      });
-
-      // 监听视频播放结束事件，自动播放下一集
-      artPlayerRef.current.on('video:ended', () => {
-        const d = detailRef.current;
-        const idx = currentEpisodeIndexRef.current;
-        if (d && d.episodes && idx < d.episodes.length - 1) {
-          setTimeout(() => {
-            setCurrentEpisodeIndex(idx + 1);
-          }, 1000);
-        }
-      });
-
-      artPlayerRef.current.on('video:timeupdate', () => {
-        const now = Date.now();
-        let interval = 5000;
-        if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
-          interval = 10000;
-        }
-        if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'upstash') {
-          interval = 20000;
-        }
-        if (now - lastSaveTimeRef.current > interval) {
-          saveCurrentPlayProgress();
-          lastSaveTimeRef.current = now;
-        }
-      });
-
-      artPlayerRef.current.on('pause', () => {
+      if (now - lastSaveTimeRef.current > interval) {
         saveCurrentPlayProgress();
-      });
-
-      if (artPlayerRef.current?.video) {
-        ensureVideoSource(
-          artPlayerRef.current.video as HTMLVideoElement,
-          videoUrl
-        );
+        lastSaveTimeRef.current = now;
       }
-    } catch (err) {
-      console.error('创建播放器失败:', err);
-      setError('播放器初始化失败');
+    },
+    [saveCurrentPlayProgress]
+  );
+
+  const handlePlayerEnded = useCallback(() => {
+    const d = detailRef.current;
+    const idx = currentEpisodeIndexRef.current;
+    if (d && d.episodes && idx < d.episodes.length - 1) {
+      setTimeout(() => {
+        setCurrentEpisodeIndex(idx + 1);
+      }, 1000);
     }
-  }, [Artplayer, Hls, videoUrl, loading, blockAdEnabled]);
+  }, []);
+
+  const handlePlayerCanPlay = useCallback(() => {
+    setError(null);
+    setIsVideoLoading(false);
+  }, []);
+
+  const handlePlayerError = useCallback((err: any) => {
+    console.error('播放器错误:', err);
+  }, []);
+
+  const handlePlayerPause = useCallback(() => {
+    saveCurrentPlayProgress();
+  }, [saveCurrentPlayProgress]);
 
   // 当组件卸载时清理定时器
   useEffect(() => {
@@ -1811,10 +1208,28 @@ function PlayPageClient() {
               }`}
             >
               <div className='relative w-full h-[300px] lg:h-full'>
-                <div
-                  ref={artRef}
-                  className='bg-black w-full h-full rounded-xl overflow-hidden shadow-lg'
-                ></div>
+                {videoUrl && (
+                  <VidstackPlayer
+                    ref={playerRef}
+                    src={videoUrl}
+                    poster={processImageUrl(videoCover)}
+                    title={`${videoTitle} - 第${currentEpisodeIndex + 1}集`}
+                    autoplay={true}
+                    blockAdEnabled={blockAdEnabled}
+                    skipConfig={skipConfig}
+                    resumeTime={resumeTimeRef.current || undefined}
+                    onTimeUpdate={handlePlayerTimeUpdate}
+                    onEnded={handlePlayerEnded}
+                    onCanPlay={handlePlayerCanPlay}
+                    onError={handlePlayerError}
+                    onPause={handlePlayerPause}
+                    onNextEpisode={
+                      currentEpisodeIndex < totalEpisodes - 1
+                        ? handleNextEpisode
+                        : undefined
+                    }
+                  />
+                )}
 
                 {/* 换源加载蒙层 */}
                 {isVideoLoading && (

@@ -9,6 +9,9 @@ const nextConfig = {
   reactStrictMode: false,
   swcMinify: true,
 
+  // Transpile Vidstack ESM packages
+  transpilePackages: ['@vidstack/react', 'vidstack'],
+
   // Uncoment to add domain whitelist
   images: {
     unoptimized: true,
