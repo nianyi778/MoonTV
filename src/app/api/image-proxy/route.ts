@@ -2,13 +2,41 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
+/**
+ * 将豆瓣图片 URL 转换为高清版本
+ */
+function getDoubanHDUrl(url: string): string {
+  if (!url) return url;
+
+  // 已经是高清版本
+  if (url.includes('/photo/l/') || url.includes('/photo/raw/')) {
+    return url;
+  }
+
+  // 转换为大图版本
+  if (url.includes('doubanio.com')) {
+    return url
+      .replace(/\/view\/photo\/[^/]+\//, '/view/photo/l/')
+      .replace(/\/s_ratio_poster\//, '/l/')
+      .replace(/\/m\/public\//, '/l/public/')
+      .replace(/\/s\/public\//, '/l/public/');
+  }
+
+  return url;
+}
+
 // OrionTV 兼容接口
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const imageUrl = searchParams.get('url');
+  let imageUrl = searchParams.get('url');
 
   if (!imageUrl) {
     return NextResponse.json({ error: 'Missing image URL' }, { status: 400 });
+  }
+
+  // 自动将豆瓣小图转换为高清图
+  if (imageUrl.includes('doubanio.com') || imageUrl.includes('douban.com')) {
+    imageUrl = getDoubanHDUrl(imageUrl);
   }
 
   try {
