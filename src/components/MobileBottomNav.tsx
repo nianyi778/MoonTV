@@ -70,40 +70,47 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
   return (
     <nav
-      className='md:hidden fixed left-0 right-0 z-[600] bg-white/90 backdrop-blur-xl border-t border-gray-200/50 overflow-hidden dark:bg-gray-900/80 dark:border-gray-700/50'
+      className='md:hidden fixed left-0 right-0 z-[600] glass'
       style={{
-        /* 紧贴视口底部，同时在内部留出安全区高度 */
         bottom: 0,
         paddingBottom: 'env(safe-area-inset-bottom)',
-        minHeight: 'calc(3.5rem + env(safe-area-inset-bottom))',
+        minHeight: 'calc(4rem + env(safe-area-inset-bottom))',
       }}
     >
-      <ul className='flex items-center overflow-x-auto scrollbar-hide'>
+      <ul className='flex items-center justify-around px-2'>
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
-            <li
-              key={item.href}
-              className='flex-shrink-0'
-              style={{ width: '20vw', minWidth: '20vw' }}
-            >
+            <li key={item.href} className='flex-1'>
               <Link
                 href={item.href}
-                className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs'
+                className='relative flex flex-col items-center justify-center w-full py-2 gap-1'
               >
-                <item.icon
-                  className={`h-6 w-6 ${
+                {/* 激活指示器 */}
+                {active && (
+                  <div className='absolute -top-0.5 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-brand-500' />
+                )}
+                <div
+                  className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${
                     active
-                      ? 'text-green-600 dark:text-green-400'
+                      ? 'bg-brand-500/10 dark:bg-brand-500/20'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <item.icon
+                    className={`h-5 w-5 transition-colors duration-200 ${
+                      active
+                        ? 'text-brand-600 dark:text-brand-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                  />
+                </div>
+                <span
+                  className={`text-[10px] font-medium transition-colors duration-200 ${
+                    active
+                      ? 'text-brand-600 dark:text-brand-400'
                       : 'text-gray-500 dark:text-gray-400'
                   }`}
-                />
-                <span
-                  className={
-                    active
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-gray-600 dark:text-gray-300'
-                  }
                 >
                   {item.label}
                 </span>

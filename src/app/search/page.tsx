@@ -245,41 +245,62 @@ function SearchPageClient() {
 
   return (
     <PageLayout activePath='/search'>
-      <div className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible mb-10'>
-        {/* 搜索框 */}
-        <div className='mb-8'>
+      <div className='px-4 sm:px-8 lg:px-12 py-6 sm:py-10 overflow-visible mb-10'>
+        {/* 搜索框 - 更现代的设计 */}
+        <div className='mb-10'>
           <form onSubmit={handleSearch} className='max-w-2xl mx-auto'>
             <div className='relative'>
-              <Search className='absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500' />
+              <div className='absolute left-4 top-1/2 -translate-y-1/2 p-1'>
+                <Search className='h-5 w-5 text-gray-400' />
+              </div>
               <input
                 id='searchInput'
                 type='text'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder='搜索电影、电视剧...'
-                className='w-full h-12 rounded-lg bg-gray-50/80 py-3 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white border border-gray-200/50 shadow-sm dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-500 dark:focus:bg-gray-700 dark:border-gray-700'
+                className='input search-input h-14 text-base shadow-lg'
               />
+              {searchQuery && (
+                <button
+                  type='button'
+                  onClick={() => setSearchQuery('')}
+                  className='absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+                >
+                  <X className='h-5 w-5 text-gray-400' />
+                </button>
+              )}
             </div>
           </form>
         </div>
 
         {/* 搜索结果或搜索历史 */}
-        <div className='max-w-[95%] mx-auto mt-12 overflow-visible'>
+        <div className='max-w-[1600px] mx-auto mt-8 overflow-visible'>
           {isLoading ? (
-            <div className='flex justify-center items-center h-40'>
-              <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-green-500'></div>
+            <div className='flex flex-col items-center justify-center h-60 gap-4'>
+              <div className='relative w-12 h-12'>
+                <div className='absolute inset-0 rounded-full border-4 border-brand-100 dark:border-brand-900'></div>
+                <div className='absolute inset-0 rounded-full border-4 border-transparent border-t-brand-500 animate-spin'></div>
+              </div>
+              <p className='text-gray-400 text-sm'>搜索中...</p>
             </div>
           ) : showResults ? (
-            <section className='mb-12'>
+            <section className='mb-12 animate-fade-in'>
               {/* 标题 + 聚合开关 */}
               <div className='mb-8 flex items-center justify-between'>
-                <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
+                <h2 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-white'>
                   搜索结果
+                  <span className='ml-2 text-sm font-normal text-gray-400'>
+                    {viewMode === 'agg'
+                      ? aggregatedResults.length
+                      : searchResults.length}{' '}
+                    个结果
+                  </span>
                 </h2>
-                {/* 聚合开关 */}
-                <label className='flex items-center gap-2 cursor-pointer select-none'>
-                  <span className='text-sm text-gray-700 dark:text-gray-300'>
-                    聚合
+                {/* 聚合开关 - 更精致的设计 */}
+                <label className='flex items-center gap-3 cursor-pointer select-none px-4 py-2 rounded-xl glass'>
+                  <span className='text-sm font-medium text-gray-600 dark:text-gray-300'>
+                    聚合显示
                   </span>
                   <div className='relative'>
                     <input
@@ -290,19 +311,23 @@ function SearchPageClient() {
                         setViewMode(viewMode === 'agg' ? 'all' : 'agg')
                       }
                     />
-                    <div className='w-9 h-5 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
-                    <div className='absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4'></div>
+                    <div className='w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full peer-checked:bg-brand-500 transition-colors duration-200'></div>
+                    <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 peer-checked:translate-x-5'></div>
                   </div>
                 </label>
               </div>
               <div
                 key={`search-results-${viewMode}`}
-                className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
+                className='grid grid-cols-3 gap-3 sm:gap-6 sm:grid-cols-[repeat(auto-fill,_minmax(160px,_1fr))] lg:grid-cols-[repeat(auto-fill,_minmax(180px,_1fr))]'
               >
                 {viewMode === 'agg'
-                  ? aggregatedResults.map(([mapKey, group]) => {
+                  ? aggregatedResults.map(([mapKey, group], index) => {
                       return (
-                        <div key={`agg-${mapKey}`} className='w-full'>
+                        <div
+                          key={`agg-${mapKey}`}
+                          className='w-full animate-fade-in-up'
+                          style={{ animationDelay: `${index * 30}ms` }}
+                        >
                           <VideoCard
                             from='search'
                             items={group}
@@ -315,10 +340,11 @@ function SearchPageClient() {
                         </div>
                       );
                     })
-                  : searchResults.map((item) => (
+                  : searchResults.map((item, index) => (
                       <div
                         key={`all-${item.source}-${item.id}`}
-                        className='w-full'
+                        className='w-full animate-fade-in-up'
+                        style={{ animationDelay: `${index * 30}ms` }}
                       >
                         <VideoCard
                           id={item.id}
@@ -340,31 +366,60 @@ function SearchPageClient() {
                       </div>
                     ))}
                 {searchResults.length === 0 && (
-                  <div className='col-span-full text-center text-gray-500 py-8 dark:text-gray-400'>
-                    未找到相关结果
+                  <div className='col-span-full flex flex-col items-center justify-center py-20 text-gray-400'>
+                    <svg
+                      className='w-16 h-16 mb-4'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={1.5}
+                        d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                      />
+                    </svg>
+                    <p className='text-lg font-medium'>未找到相关结果</p>
+                    <p className='text-sm mt-1'>试试其他关键词</p>
                   </div>
                 )}
               </div>
             </section>
           ) : searchHistory.length > 0 ? (
-            // 搜索历史
-            <section className='mb-12'>
-              <h2 className='mb-4 text-xl font-bold text-gray-800 text-left dark:text-gray-200'>
-                搜索历史
-                {searchHistory.length > 0 && (
-                  <button
-                    onClick={() => {
-                      clearSearchHistory(); // 事件监听会自动更新界面
-                    }}
-                    className='ml-3 text-sm text-gray-500 hover:text-red-500 transition-colors dark:text-gray-400 dark:hover:text-red-500'
+            // 搜索历史 - 更精致的设计
+            <section className='mb-12 animate-fade-in'>
+              <div className='flex items-center justify-between mb-6'>
+                <h2 className='text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2'>
+                  <svg
+                    className='w-5 h-5 text-gray-400'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
                   >
-                    清空
-                  </button>
-                )}
-              </h2>
-              <div className='flex flex-wrap gap-2'>
-                {searchHistory.map((item) => (
-                  <div key={item} className='relative group'>
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+                    />
+                  </svg>
+                  搜索历史
+                </h2>
+                <button
+                  onClick={() => clearSearchHistory()}
+                  className='text-sm font-medium text-gray-500 hover:text-red-500 transition-colors dark:text-gray-400'
+                >
+                  清空全部
+                </button>
+              </div>
+              <div className='flex flex-wrap gap-3'>
+                {searchHistory.map((item, index) => (
+                  <div
+                    key={item}
+                    className='relative group animate-fade-in'
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
                     <button
                       onClick={() => {
                         setSearchQuery(item);
@@ -372,19 +427,18 @@ function SearchPageClient() {
                           `/search?q=${encodeURIComponent(item.trim())}`
                         );
                       }}
-                      className='px-4 py-2 bg-gray-500/10 hover:bg-gray-300 rounded-full text-sm text-gray-700 transition-colors duration-200 dark:bg-gray-700/50 dark:hover:bg-gray-600 dark:text-gray-300'
+                      className='px-4 py-2.5 glass rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-all duration-200'
                     >
                       {item}
                     </button>
-                    {/* 删除按钮 */}
                     <button
                       aria-label='删除搜索历史'
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
-                        deleteSearchHistory(item); // 事件监听会自动更新界面
+                        deleteSearchHistory(item);
                       }}
-                      className='absolute -top-1 -right-1 w-4 h-4 opacity-0 group-hover:opacity-100 bg-gray-400 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] transition-colors'
+                      className='absolute -top-1.5 -right-1.5 w-5 h-5 opacity-0 group-hover:opacity-100 bg-gray-400 hover:bg-red-500 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow'
                     >
                       <X className='w-3 h-3' />
                     </button>
@@ -392,21 +446,40 @@ function SearchPageClient() {
                 ))}
               </div>
             </section>
-          ) : null}
+          ) : (
+            // 空状态
+            <div className='flex flex-col items-center justify-center py-20 text-gray-400 animate-fade-in'>
+              <svg
+                className='w-20 h-20 mb-4'
+                fill='none'
+                viewBox='0 0 24 24'
+                stroke='currentColor'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={1}
+                  d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                />
+              </svg>
+              <p className='text-lg font-medium'>搜索你想看的影片</p>
+              <p className='text-sm mt-1'>输入电影或电视剧名称开始搜索</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 返回顶部悬浮按钮 */}
+      {/* 返回顶部悬浮按钮 - 更现代的设计 */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-20 md:bottom-6 right-6 z-[500] w-12 h-12 bg-green-500/90 hover:bg-green-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${
+        className={`fixed bottom-24 md:bottom-8 right-6 z-[500] w-12 h-12 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl shadow-glow transition-all duration-300 ease-spring flex items-center justify-center ${
           showBackToTop
-            ? 'opacity-100 translate-y-0 pointer-events-auto'
-            : 'opacity-0 translate-y-4 pointer-events-none'
+            ? 'opacity-100 translate-y-0 scale-100'
+            : 'opacity-0 translate-y-4 scale-95 pointer-events-none'
         }`}
         aria-label='返回顶部'
       >
-        <ChevronUp className='w-6 h-6 transition-transform group-hover:scale-110' />
+        <ChevronUp className='w-6 h-6' />
       </button>
     </PageLayout>
   );
