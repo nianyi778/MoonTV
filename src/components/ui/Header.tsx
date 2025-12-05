@@ -45,15 +45,23 @@ export function Header({ transparent = true }: HeaderProps) {
   // 监听滚动
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      // 滚动超过 10px 就显示深色背景
+      setIsScrolled(window.scrollY > 10);
     };
 
     // 立即检查一次当前滚动位置
     handleScroll();
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+
+    // 也监听 resize，因为有时候 scroll 事件可能不触发
+    window.addEventListener('resize', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [pathname]); // 路由变化时重新检查
 
   const baseNavLinks = [
     { label: '首页', href: '/' },
