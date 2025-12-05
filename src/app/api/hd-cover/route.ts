@@ -86,40 +86,6 @@ async function setCacheValue(
   }
 }
 
-// 豆瓣图片 URL 转换为高清版本
-function getDoubanHDUrl(url: string): string[] {
-  if (!url) return [];
-
-  const urls: string[] = [];
-
-  // 豆瓣图片 URL 格式转换
-  // 原始: https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2915671709.jpg
-  // 高清: https://img1.doubanio.com/view/photo/l/public/p2915671709.jpg
-  // 超大: https://img1.doubanio.com/view/photo/raw/public/p2915671709.jpg
-
-  if (url.includes('doubanio.com')) {
-    // 尝试原始尺寸
-    const rawUrl = url
-      .replace(/\/view\/photo\/[^/]+\//, '/view/photo/raw/')
-      .replace(/\/s_ratio_poster\//, '/raw/');
-    urls.push(rawUrl);
-
-    // 尝试大图尺寸
-    const largeUrl = url
-      .replace(/\/view\/photo\/[^/]+\//, '/view/photo/l/')
-      .replace(/\/s_ratio_poster\//, '/l/');
-    urls.push(largeUrl);
-
-    // 尝试中等尺寸
-    const mediumUrl = url
-      .replace(/\/view\/photo\/[^/]+\//, '/view/photo/m/')
-      .replace(/\/s_ratio_poster\//, '/m/');
-    urls.push(mediumUrl);
-  }
-
-  return urls;
-}
-
 interface TMDBResult {
   poster: string | null;
   backdrop: string | null;
@@ -166,29 +132,6 @@ async function searchTMDB(title: string, year?: string): Promise<TMDBResult> {
   }
 }
 
-// 测试图片 URL 是否可用
-async function testImageUrl(url: string): Promise<boolean> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    const response = await fetch(url, {
-      method: 'HEAD',
-      signal: controller.signal,
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        Referer: 'https://movie.douban.com/',
-      },
-    });
-
-    clearTimeout(timeoutId);
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const originalUrl = searchParams.get('url');
@@ -223,51 +166,46 @@ export async function GET(request: NextRequest) {
   const candidates: string[] = [];
   let tmdbResult: TMDBResult = { poster: null, backdrop: null };
 
-  // 1. 优先尝试 TMDB 搜索（高清质量最佳）
+  // 直接使用 TMDB 获取高清图（豆瓣图片质量差，跳过）
   if (title) {
     tmdbResult = await searchTMDB(title, year || undefined);
     const tmdbUrl =
       type === 'backdrop' ? tmdbResult.backdrop : tmdbResult.poster;
     if (tmdbUrl) {
-      candidates.unshift(tmdbUrl);
+      candidates.push(tmdbUrl);
     }
     // 如果请求的是 backdrop 但没有，尝试用 poster
     if (type === 'backdrop' && !tmdbResult.backdrop && tmdbResult.poster) {
       candidates.push(tmdbResult.poster);
     }
-  }
-
-  // 2. 备选：豆瓣高清版本
-  if (originalUrl) {
-    const doubanHDUrls = getDoubanHDUrl(originalUrl);
-    candidates.push(...doubanHDUrls);
-  }
-
-  // 3. 测试并返回第一个可用的高清图片
-  for (const url of candidates) {
-    const isAvailable = await testImageUrl(url);
-    if (isAvailable) {
-      const result = {
-        success: true,
-        hdUrl: url,
-        backdrop: tmdbResult.backdrop,
-        poster: tmdbResult.poster,
-        source: url.includes('tmdb') ? 'tmdb' : 'douban',
-      };
-
-      // 保存到 KV 缓存
-      await setCacheValue(cacheKey, JSON.stringify(result), CACHE_TTL);
-
-      return NextResponse.json(result, {
-        headers: {
-          'Cache-Control': 'public, max-age=86400, s-maxage=604800',
-          'X-Cache': 'MISS',
-        },
-      });
+    // 如果请求的是 poster 但没有，尝试用 backdrop
+    if (type === 'poster' && !tmdbResult.poster && tmdbResult.backdrop) {
+      candidates.push(tmdbResult.backdrop);
     }
   }
 
-  // 4. 如果都失败，返回原始 URL
+  // TMDB 图片可直接使用，无需测试
+  if (candidates.length > 0) {
+    const result = {
+      success: true,
+      hdUrl: candidates[0],
+      backdrop: tmdbResult.backdrop,
+      poster: tmdbResult.poster,
+      source: 'tmdb',
+    };
+
+    // 保存到 KV 缓存
+    await setCacheValue(cacheKey, JSON.stringify(result), CACHE_TTL);
+
+    return NextResponse.json(result, {
+      headers: {
+        'Cache-Control': 'public, max-age=86400, s-maxage=604800',
+        'X-Cache': 'MISS',
+      },
+    });
+  }
+
+  // 如果 TMDB 没有结果，返回原始 URL
   const fallbackResult = {
     success: true,
     hdUrl: originalUrl || '',
@@ -277,7 +215,7 @@ export async function GET(request: NextRequest) {
     fallback: true,
   };
 
-  // 即使是 fallback 也缓存，避免重复请求
+  // 即使是 fallback 也缓存，避免重复请求（短时间）
   await setCacheValue(cacheKey, JSON.stringify(fallbackResult), 60 * 60); // 1小时
 
   return NextResponse.json(fallbackResult, {
