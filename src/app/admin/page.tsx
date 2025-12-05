@@ -98,21 +98,25 @@ const CollapsibleTab = ({
   children,
 }: CollapsibleTabProps) => {
   return (
-    <div className='rounded-xl shadow-sm mb-4 overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 '>
+    <div className='rounded-xl shadow-lg mb-4 overflow-hidden bg-zinc-900 border border-zinc-800'>
       <button
         onClick={onToggle}
-        className='w-full px-6 py-4 flex items-center justify-between bg-white/5 hover:bg-white/10 transition-colors'
+        className='w-full px-6 py-4 flex items-center justify-between bg-zinc-900 hover:bg-zinc-800 transition-colors'
       >
         <div className='flex items-center gap-3'>
-          {icon}
+          <span className='text-orange-500'>{icon}</span>
           <h3 className='text-lg font-medium text-white'>{title}</h3>
         </div>
-        <div className='text-gray-400'>
+        <div className='text-zinc-400'>
           {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
         </div>
       </button>
 
-      {isExpanded && <div className='px-6 py-4'>{children}</div>}
+      {isExpanded && (
+        <div className='px-6 py-4 bg-zinc-900/50 border-t border-zinc-800'>
+          {children}
+        </div>
+      )}
     </div>
   );
 };
@@ -279,15 +283,15 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
   };
 
   if (!config) {
-    return <div className='text-center text-gray-400'>加载中...</div>;
+    return <div className='text-center text-zinc-400'>加载中...</div>;
   }
 
   return (
     <div className='space-y-6'>
       {/* 用户统计 */}
       <div>
-        <h4 className='text-sm font-medium text-gray-300 mb-3'>用户统计</h4>
-        <div className='p-4 bg-brand-500/10 rounded-lg border border-brand-500/30'>
+        <h4 className='text-sm font-medium text-zinc-300 mb-3'>用户统计</h4>
+        <div className='p-4 bg-orange-500/10 rounded-lg border border-brand-500/30'>
           <div className='text-2xl font-bold text-brand-400'>
             {config.UserConfig.Users.length}
           </div>
@@ -297,21 +301,21 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
 
       {/* 注册设置 */}
       <div>
-        <h4 className='text-sm font-medium text-gray-300 mb-3'>注册设置</h4>
+        <h4 className='text-sm font-medium text-zinc-300 mb-3'>注册设置</h4>
         <div className='flex items-center justify-between'>
           <label
-            className={`text-gray-300 ${
+            className={`text-zinc-300 ${
               isD1Storage || isUpstashStorage ? 'opacity-50' : ''
             }`}
           >
             允许新用户注册
             {isD1Storage && (
-              <span className='ml-2 text-xs text-gray-400'>
+              <span className='ml-2 text-xs text-zinc-400'>
                 (D1 环境下请通过环境变量修改)
               </span>
             )}
             {isUpstashStorage && (
-              <span className='ml-2 text-xs text-gray-400'>
+              <span className='ml-2 text-xs text-zinc-400'>
                 (Upstash 环境下请通过环境变量修改)
               </span>
             )}
@@ -324,7 +328,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
             }
             disabled={isD1Storage || isUpstashStorage}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
-              userSettings.enableRegistration ? 'bg-brand-500' : 'bg-white/10'
+              userSettings.enableRegistration ? 'bg-orange-500' : 'bg-zinc-800'
             } ${
               isD1Storage || isUpstashStorage
                 ? 'opacity-50 cursor-not-allowed'
@@ -345,7 +349,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
       {/* 用户列表 */}
       <div>
         <div className='flex items-center justify-between mb-3'>
-          <h4 className='text-sm font-medium text-gray-300'>用户列表</h4>
+          <h4 className='text-sm font-medium text-zinc-300'>用户列表</h4>
           <button
             onClick={() => {
               setShowAddUserForm(!showAddUserForm);
@@ -354,7 +358,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                 setChangePasswordUser({ username: '', password: '' });
               }
             }}
-            className='px-3 py-1 bg-brand-500 hover:bg-brand-600 text-white text-sm rounded-lg transition-colors'
+            className='px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg transition-colors'
           >
             {showAddUserForm ? '取消' : '添加用户'}
           </button>
@@ -362,7 +366,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
 
         {/* 添加用户表单 */}
         {showAddUserForm && (
-          <div className='mb-4 p-4 bg-white/5 rounded-lg border border-white/10'>
+          <div className='mb-4 p-4 bg-zinc-800 rounded-lg border border-zinc-700'>
             <div className='flex flex-col sm:flex-row gap-4 sm:gap-3'>
               <input
                 type='text'
@@ -371,7 +375,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                 onChange={(e) =>
                   setNewUser((prev) => ({ ...prev, username: e.target.value }))
                 }
-                className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent'
+                className='flex-1 px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent'
               />
               <input
                 type='password'
@@ -380,12 +384,12 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                 onChange={(e) =>
                   setNewUser((prev) => ({ ...prev, password: e.target.value }))
                 }
-                className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent'
+                className='flex-1 px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent'
               />
               <button
                 onClick={handleAddUser}
                 disabled={!newUser.username || !newUser.password}
-                className='w-full sm:w-auto px-4 py-2 bg-brand-500 hover:bg-brand-600 disabled:bg-gray-400 text-white rounded-lg transition-colors'
+                className='w-full sm:w-auto px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-zinc-600 text-white rounded-lg transition-colors'
               >
                 添加
               </button>
@@ -405,7 +409,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                 placeholder='用户名'
                 value={changePasswordUser.username}
                 disabled
-                className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-white/10 text-white cursor-not-allowed'
+                className='flex-1 px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white cursor-not-allowed'
               />
               <input
                 type='password'
@@ -417,12 +421,12 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                     password: e.target.value,
                   }))
                 }
-                className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                className='flex-1 px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
               />
               <button
                 onClick={handleChangePassword}
                 disabled={!changePasswordUser.password}
-                className='w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors'
+                className='w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-600 text-white rounded-lg transition-colors'
               >
                 修改密码
               </button>
@@ -431,7 +435,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                   setShowChangePasswordForm(false);
                   setChangePasswordUser({ username: '', password: '' });
                 }}
-                className='w-full sm:w-auto px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors'
+                className='w-full sm:w-auto px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg transition-colors'
               >
                 取消
               </button>
@@ -440,31 +444,31 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         )}
 
         {/* 用户列表 */}
-        <div className='border border-white/10 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto'>
+        <div className='border border-zinc-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto'>
           <table className='min-w-full divide-y divide-white/10'>
-            <thead className='bg-white/5'>
+            <thead className='bg-zinc-800'>
               <tr>
                 <th
                   scope='col'
-                  className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'
+                  className='px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider'
                 >
                   用户名
                 </th>
                 <th
                   scope='col'
-                  className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'
+                  className='px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider'
                 >
                   角色
                 </th>
                 <th
                   scope='col'
-                  className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'
+                  className='px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider'
                 >
                   状态
                 </th>
                 <th
                   scope='col'
-                  className='px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider'
+                  className='px-6 py-3 text-right text-xs font-medium text-zinc-400 uppercase tracking-wider'
                 >
                   操作
                 </th>
@@ -507,7 +511,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                     return (
                       <tr
                         key={user.username}
-                        className='hover:bg-white/5 transition-colors'
+                        className='hover:bg-zinc-800 transition-colors'
                       >
                         <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-white'>
                           {user.username}
@@ -519,7 +523,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                                 ? 'bg-yellow-500/10 text-yellow-400'
                                 : user.role === 'admin'
                                 ? 'bg-purple-500/10 text-purple-400'
-                                : 'bg-white/10 text-gray-300'
+                                : 'bg-zinc-800 text-zinc-300'
                             }`}
                           >
                             {user.role === 'owner'
@@ -533,7 +537,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                           <span
                             className={`px-2 py-1 text-xs rounded-full ${
                               !user.banned
-                                ? 'bg-brand-500/10 text-brand-400'
+                                ? 'bg-orange-500/10 text-brand-400'
                                 : 'bg-red-500/10 text-red-400'
                             }`}
                           >
@@ -568,7 +572,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                                   onClick={() =>
                                     handleRemoveAdmin(user.username)
                                   }
-                                  className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-white/10 text-gray-300 hover:bg-white/20 transition-colors'
+                                  className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors'
                                 >
                                   取消管理
                                 </button>
@@ -586,7 +590,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                                     onClick={() =>
                                       handleUnbanUser(user.username)
                                     }
-                                    className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 transition-colors'
+                                    className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-orange-500/20 text-brand-400 hover:bg-orange-500/30 transition-colors'
                                   >
                                     解封
                                   </button>
@@ -756,10 +760,10 @@ const VideoSourceConfig = ({
       <tr
         ref={setNodeRef}
         style={style}
-        className='hover:bg-white/5 transition-colors select-none'
+        className='hover:bg-zinc-800 transition-colors select-none'
       >
         <td
-          className='px-2 py-4 cursor-grab text-gray-400'
+          className='px-2 py-4 cursor-grab text-zinc-400'
           style={{ touchAction: 'none' }}
           {...attributes}
           {...listeners}
@@ -788,7 +792,7 @@ const VideoSourceConfig = ({
           <span
             className={`px-2 py-1 text-xs rounded-full ${
               !source.disabled
-                ? 'bg-brand-500/10 text-brand-400'
+                ? 'bg-orange-500/10 text-brand-400'
                 : 'bg-red-500/10 text-red-400'
             }`}
           >
@@ -801,7 +805,7 @@ const VideoSourceConfig = ({
             className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
               !source.disabled
                 ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                : 'bg-brand-500/20 text-brand-400 hover:bg-brand-500/30'
+                : 'bg-orange-500/20 text-brand-400 hover:bg-orange-500/30'
             } transition-colors`}
           >
             {!source.disabled ? '禁用' : '启用'}
@@ -809,7 +813,7 @@ const VideoSourceConfig = ({
           {source.from !== 'config' && (
             <button
               onClick={() => handleDelete(source.key)}
-              className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-white/10 text-gray-300 hover:bg-white/20 transition-colors'
+              className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors'
             >
               删除
             </button>
@@ -820,24 +824,24 @@ const VideoSourceConfig = ({
   };
 
   if (!config) {
-    return <div className='text-center text-gray-400'>加载中...</div>;
+    return <div className='text-center text-zinc-400'>加载中...</div>;
   }
 
   return (
     <div className='space-y-6'>
       {/* 添加视频源表单 */}
       <div className='flex items-center justify-between'>
-        <h4 className='text-sm font-medium text-gray-300'>视频源列表</h4>
+        <h4 className='text-sm font-medium text-zinc-300'>视频源列表</h4>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className='px-3 py-1 bg-brand-500 hover:bg-brand-600 text-white text-sm rounded-lg transition-colors'
+          className='px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg transition-colors'
         >
           {showAddForm ? '取消' : '添加视频源'}
         </button>
       </div>
 
       {showAddForm && (
-        <div className='p-4 bg-white/5 rounded-lg border border-white/10 space-y-4'>
+        <div className='p-4 bg-zinc-800 rounded-lg border border-zinc-700 space-y-4'>
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <input
               type='text'
@@ -846,7 +850,7 @@ const VideoSourceConfig = ({
               onChange={(e) =>
                 setNewSource((prev) => ({ ...prev, name: e.target.value }))
               }
-              className='px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white'
+              className='px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white'
             />
             <input
               type='text'
@@ -855,7 +859,7 @@ const VideoSourceConfig = ({
               onChange={(e) =>
                 setNewSource((prev) => ({ ...prev, key: e.target.value }))
               }
-              className='px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white'
+              className='px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white'
             />
             <input
               type='text'
@@ -864,7 +868,7 @@ const VideoSourceConfig = ({
               onChange={(e) =>
                 setNewSource((prev) => ({ ...prev, api: e.target.value }))
               }
-              className='px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white'
+              className='px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white'
             />
             <input
               type='text'
@@ -873,14 +877,14 @@ const VideoSourceConfig = ({
               onChange={(e) =>
                 setNewSource((prev) => ({ ...prev, detail: e.target.value }))
               }
-              className='px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white'
+              className='px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white'
             />
           </div>
           <div className='flex justify-end'>
             <button
               onClick={handleAddSource}
               disabled={!newSource.name || !newSource.key || !newSource.api}
-              className='w-full sm:w-auto px-4 py-2 bg-brand-500 hover:bg-brand-600 disabled:bg-gray-400 text-white rounded-lg transition-colors'
+              className='w-full sm:w-auto px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-zinc-600 text-white rounded-lg transition-colors'
             >
               添加
             </button>
@@ -889,27 +893,27 @@ const VideoSourceConfig = ({
       )}
 
       {/* 视频源表格 */}
-      <div className='border border-white/10 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto'>
+      <div className='border border-zinc-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto'>
         <table className='min-w-full divide-y divide-white/10'>
-          <thead className='bg-white/5'>
+          <thead className='bg-zinc-800'>
             <tr>
               <th className='w-8' />
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider'>
                 名称
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider'>
                 Key
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider'>
                 API 地址
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider'>
                 Detail 地址
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider'>
                 状态
               </th>
-              <th className='px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider'>
+              <th className='px-6 py-3 text-right text-xs font-medium text-zinc-400 uppercase tracking-wider'>
                 操作
               </th>
             </tr>
@@ -1100,13 +1104,13 @@ const CategoryConfig = ({
       <tr
         ref={setNodeRef}
         style={style}
-        className='hover:bg-white/5 transition-colors select-none'
+        className='hover:bg-zinc-800 transition-colors select-none'
       >
         <td
           className={`px-2 py-4 ${
             isD1Storage || isUpstashStorage
               ? 'text-gray-200'
-              : 'cursor-grab text-gray-400'
+              : 'cursor-grab text-zinc-400'
           }`}
           style={{ touchAction: 'none' }}
           {...(isD1Storage || isUpstashStorage
@@ -1139,7 +1143,7 @@ const CategoryConfig = ({
           <span
             className={`px-2 py-1 text-xs rounded-full ${
               !category.disabled
-                ? 'bg-brand-500/10 text-brand-400'
+                ? 'bg-orange-500/10 text-brand-400'
                 : 'bg-red-500/10 text-red-400'
             }`}
           >
@@ -1156,10 +1160,10 @@ const CategoryConfig = ({
             disabled={isD1Storage || isUpstashStorage}
             className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
               isD1Storage || isUpstashStorage
-                ? 'bg-gray-400 cursor-not-allowed text-white'
+                ? 'bg-zinc-600 cursor-not-allowed text-white'
                 : !category.disabled
                 ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                : 'bg-brand-500/20 text-brand-400 hover:bg-brand-500/30'
+                : 'bg-orange-500/20 text-brand-400 hover:bg-orange-500/30'
             } transition-colors`}
           >
             {!category.disabled ? '禁用' : '启用'}
@@ -1167,7 +1171,7 @@ const CategoryConfig = ({
           {category.from !== 'config' && !isD1Storage && !isUpstashStorage && (
             <button
               onClick={() => handleDelete(category.query, category.type)}
-              className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-white/10 text-gray-300 hover:bg-white/20 transition-colors'
+              className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors'
             >
               删除
             </button>
@@ -1178,22 +1182,22 @@ const CategoryConfig = ({
   };
 
   if (!config) {
-    return <div className='text-center text-gray-400'>加载中...</div>;
+    return <div className='text-center text-zinc-400'>加载中...</div>;
   }
 
   return (
     <div className='space-y-6'>
       {/* 添加分类表单 */}
       <div className='flex items-center justify-between'>
-        <h4 className='text-sm font-medium text-gray-300'>
+        <h4 className='text-sm font-medium text-zinc-300'>
           自定义分类列表
           {isD1Storage && (
-            <span className='ml-2 text-xs text-gray-400'>
+            <span className='ml-2 text-xs text-zinc-400'>
               (D1 环境下请通过配置文件修改)
             </span>
           )}
           {isUpstashStorage && (
-            <span className='ml-2 text-xs text-gray-400'>
+            <span className='ml-2 text-xs text-zinc-400'>
               (Upstash 环境下请通过配置文件修改)
             </span>
           )}
@@ -1205,8 +1209,8 @@ const CategoryConfig = ({
           disabled={isD1Storage || isUpstashStorage}
           className={`px-3 py-1 text-sm rounded-lg transition-colors ${
             isD1Storage || isUpstashStorage
-              ? 'bg-gray-400 cursor-not-allowed text-white'
-              : 'bg-brand-500 hover:bg-brand-600 text-white'
+              ? 'bg-zinc-600 cursor-not-allowed text-white'
+              : 'bg-orange-500 hover:bg-orange-600 text-white'
           }`}
         >
           {showAddForm ? '取消' : '添加分类'}
@@ -1214,7 +1218,7 @@ const CategoryConfig = ({
       </div>
 
       {showAddForm && !isD1Storage && !isUpstashStorage && (
-        <div className='p-4 bg-white/5 rounded-lg border border-white/10 space-y-4'>
+        <div className='p-4 bg-zinc-800 rounded-lg border border-zinc-700 space-y-4'>
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <input
               type='text'
@@ -1223,7 +1227,7 @@ const CategoryConfig = ({
               onChange={(e) =>
                 setNewCategory((prev) => ({ ...prev, name: e.target.value }))
               }
-              className='px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white'
+              className='px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white'
             />
             <select
               value={newCategory.type}
@@ -1233,7 +1237,7 @@ const CategoryConfig = ({
                   type: e.target.value as 'movie' | 'tv',
                 }))
               }
-              className='px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white'
+              className='px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white'
             >
               <option value='movie'>电影</option>
               <option value='tv'>电视剧</option>
@@ -1245,14 +1249,14 @@ const CategoryConfig = ({
               onChange={(e) =>
                 setNewCategory((prev) => ({ ...prev, query: e.target.value }))
               }
-              className='px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white'
+              className='px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white'
             />
           </div>
           <div className='flex justify-end'>
             <button
               onClick={handleAddCategory}
               disabled={!newCategory.name || !newCategory.query}
-              className='w-full sm:w-auto px-4 py-2 bg-brand-500 hover:bg-brand-600 disabled:bg-gray-400 text-white rounded-lg transition-colors'
+              className='w-full sm:w-auto px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-zinc-600 text-white rounded-lg transition-colors'
             >
               添加
             </button>
@@ -1261,24 +1265,24 @@ const CategoryConfig = ({
       )}
 
       {/* 分类表格 */}
-      <div className='border border-white/10 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto'>
+      <div className='border border-zinc-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto'>
         <table className='min-w-full divide-y divide-white/10'>
-          <thead className='bg-white/5'>
+          <thead className='bg-zinc-800'>
             <tr>
               <th className='w-8' />
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider'>
                 分类名称
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider'>
                 类型
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider'>
                 搜索关键词
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider'>
                 状态
               </th>
-              <th className='px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider'>
+              <th className='px-6 py-3 text-right text-xs font-medium text-zinc-400 uppercase tracking-wider'>
                 操作
               </th>
             </tr>
@@ -1379,7 +1383,7 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
   };
 
   if (!config) {
-    return <div className='text-center text-gray-400'>加载中...</div>;
+    return <div className='text-center text-zinc-400'>加载中...</div>;
   }
 
   return (
@@ -1387,18 +1391,18 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
       {/* 站点名称 */}
       <div>
         <label
-          className={`block text-sm font-medium text-gray-300 mb-2 ${
+          className={`block text-sm font-medium text-zinc-300 mb-2 ${
             isD1Storage || isUpstashStorage ? 'opacity-50' : ''
           }`}
         >
           站点名称
           {isD1Storage && (
-            <span className='ml-2 text-xs text-gray-400'>
+            <span className='ml-2 text-xs text-zinc-400'>
               (D1 环境下请通过环境变量修改)
             </span>
           )}
           {isUpstashStorage && (
-            <span className='ml-2 text-xs text-gray-400'>
+            <span className='ml-2 text-xs text-zinc-400'>
               (Upstash 环境下请通过环境变量修改)
             </span>
           )}
@@ -1412,7 +1416,7 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
             setSiteSettings((prev) => ({ ...prev, SiteName: e.target.value }))
           }
           disabled={isD1Storage || isUpstashStorage}
-          className={`w-full px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent ${
             isD1Storage || isUpstashStorage
               ? 'opacity-50 cursor-not-allowed'
               : ''
@@ -1423,18 +1427,18 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
       {/* 站点公告 */}
       <div>
         <label
-          className={`block text-sm font-medium text-gray-300 mb-2 ${
+          className={`block text-sm font-medium text-zinc-300 mb-2 ${
             isD1Storage || isUpstashStorage ? 'opacity-50' : ''
           }`}
         >
           站点公告
           {isD1Storage && (
-            <span className='ml-2 text-xs text-gray-400'>
+            <span className='ml-2 text-xs text-zinc-400'>
               (D1 环境下请通过环境变量修改)
             </span>
           )}
           {isUpstashStorage && (
-            <span className='ml-2 text-xs text-gray-400'>
+            <span className='ml-2 text-xs text-zinc-400'>
               (Upstash 环境下请通过环境变量修改)
             </span>
           )}
@@ -1451,7 +1455,7 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
           }
           disabled={isD1Storage || isUpstashStorage}
           rows={3}
-          className={`w-full px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent ${
             isD1Storage || isUpstashStorage
               ? 'opacity-50 cursor-not-allowed'
               : ''
@@ -1461,7 +1465,7 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
 
       {/* 搜索接口可拉取最大页数 */}
       <div>
-        <label className='block text-sm font-medium text-gray-300 mb-2'>
+        <label className='block text-sm font-medium text-zinc-300 mb-2'>
           搜索接口可拉取最大页数
         </label>
         <input
@@ -1474,13 +1478,13 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
               SearchDownstreamMaxPage: Number(e.target.value),
             }))
           }
-          className='w-full px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent'
+          className='w-full px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent'
         />
       </div>
 
       {/* 站点接口缓存时间 */}
       <div>
-        <label className='block text-sm font-medium text-gray-300 mb-2'>
+        <label className='block text-sm font-medium text-zinc-300 mb-2'>
           站点接口缓存时间（秒）
         </label>
         <input
@@ -1493,25 +1497,25 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
               SiteInterfaceCacheTime: Number(e.target.value),
             }))
           }
-          className='w-full px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent'
+          className='w-full px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent'
         />
       </div>
 
       {/* 图片代理 */}
       <div>
         <label
-          className={`block text-sm font-medium text-gray-300 mb-2 ${
+          className={`block text-sm font-medium text-zinc-300 mb-2 ${
             isD1Storage || isUpstashStorage ? 'opacity-50' : ''
           }`}
         >
           图片代理前缀
           {isD1Storage && (
-            <span className='ml-2 text-xs text-gray-400'>
+            <span className='ml-2 text-xs text-zinc-400'>
               (D1 环境下请通过环境变量修改)
             </span>
           )}
           {isUpstashStorage && (
-            <span className='ml-2 text-xs text-gray-400'>
+            <span className='ml-2 text-xs text-zinc-400'>
               (Upstash 环境下请通过环境变量修改)
             </span>
           )}
@@ -1529,13 +1533,13 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
             }))
           }
           disabled={isD1Storage || isUpstashStorage}
-          className={`w-full px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent ${
             isD1Storage || isUpstashStorage
               ? 'opacity-50 cursor-not-allowed'
               : ''
           }`}
         />
-        <p className='mt-1 text-xs text-gray-400'>
+        <p className='mt-1 text-xs text-zinc-400'>
           用于代理图片访问，解决跨域或访问限制问题。留空则不使用代理。
         </p>
       </div>
@@ -1543,18 +1547,18 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
       {/* 豆瓣代理设置 */}
       <div>
         <label
-          className={`block text-sm font-medium text-gray-300 mb-2 ${
+          className={`block text-sm font-medium text-zinc-300 mb-2 ${
             isD1Storage || isUpstashStorage ? 'opacity-50' : ''
           }`}
         >
           豆瓣代理地址
           {isD1Storage && (
-            <span className='ml-2 text-xs text-gray-400'>
+            <span className='ml-2 text-xs text-zinc-400'>
               (D1 环境下请通过环境变量修改)
             </span>
           )}
           {isUpstashStorage && (
-            <span className='ml-2 text-xs text-gray-400'>
+            <span className='ml-2 text-xs text-zinc-400'>
               (Upstash 环境下请通过环境变量修改)
             </span>
           )}
@@ -1572,13 +1576,13 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
             }))
           }
           disabled={isD1Storage || isUpstashStorage}
-          className={`w-full px-3 py-2 border border-white/20 rounded-lg bg-white/5 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border border-zinc-600 rounded-lg bg-zinc-800 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent ${
             isD1Storage || isUpstashStorage
               ? 'opacity-50 cursor-not-allowed'
               : ''
           }`}
         />
-        <p className='mt-1 text-xs text-gray-400'>
+        <p className='mt-1 text-xs text-zinc-400'>
           用于代理豆瓣数据访问，解决跨域或访问限制问题。留空则使用服务端API。
         </p>
       </div>
@@ -1587,18 +1591,18 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
       <div>
         <div className='flex items-center justify-between'>
           <label
-            className={`block text-sm font-medium text-gray-300 mb-2 ${
+            className={`block text-sm font-medium text-zinc-300 mb-2 ${
               isD1Storage || isUpstashStorage ? 'opacity-50' : ''
             }`}
           >
             禁用黄色过滤器
             {isD1Storage && (
-              <span className='ml-2 text-xs text-gray-400'>
+              <span className='ml-2 text-xs text-zinc-400'>
                 (D1 环境下请通过环境变量修改)
               </span>
             )}
             {isUpstashStorage && (
-              <span className='ml-2 text-xs text-gray-400'>
+              <span className='ml-2 text-xs text-zinc-400'>
                 (Upstash 环境下请通过环境变量修改)
               </span>
             )}
@@ -1615,7 +1619,7 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
             }
             disabled={isD1Storage || isUpstashStorage}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
-              siteSettings.DisableYellowFilter ? 'bg-brand-500' : 'bg-white/10'
+              siteSettings.DisableYellowFilter ? 'bg-orange-500' : 'bg-zinc-800'
             } ${
               isD1Storage || isUpstashStorage
                 ? 'opacity-50 cursor-not-allowed'
@@ -1631,7 +1635,7 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
             />
           </button>
         </div>
-        <p className='mt-1 text-xs text-gray-400'>
+        <p className='mt-1 text-xs text-zinc-400'>
           禁用黄色内容的过滤功能，允许显示所有内容。
         </p>
       </div>
@@ -1643,8 +1647,8 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
           disabled={saving}
           className={`px-4 py-2 ${
             saving
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-brand-500 hover:bg-brand-600'
+              ? 'bg-zinc-600 cursor-not-allowed'
+              : 'bg-orange-500 hover:bg-orange-600'
           } text-white rounded-lg transition-colors`}
         >
           {saving ? '保存中…' : '保存'}
@@ -1741,7 +1745,7 @@ function AdminPageClient() {
               {Array.from({ length: 3 }).map((_, index) => (
                 <div
                   key={index}
-                  className='h-20 bg-white/10 rounded-lg animate-pulse'
+                  className='h-20 bg-zinc-800 rounded-lg animate-pulse'
                 />
               ))}
             </div>
@@ -1758,15 +1762,17 @@ function AdminPageClient() {
 
   return (
     <PageLayout activePath='/admin'>
-      <div className='px-2 sm:px-10 py-4 sm:py-8'>
-        <div className='max-w-[95%] mx-auto'>
+      <div className='px-4 sm:px-8 py-6 sm:py-10 bg-zinc-950 min-h-screen'>
+        <div className='max-w-4xl mx-auto'>
           {/* 标题 + 重置配置按钮 */}
-          <div className='flex items-center gap-2 mb-8'>
-            <h1 className='text-2xl font-bold text-white'>管理员设置</h1>
+          <div className='flex items-center gap-3 mb-8'>
+            <h1 className='text-2xl md:text-3xl font-bold text-white'>
+              管理员设置
+            </h1>
             {config && role === 'owner' && (
               <button
                 onClick={handleResetConfig}
-                className='px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded-md transition-colors'
+                className='px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-medium rounded-lg border border-red-500/30 transition-colors'
               >
                 重置配置
               </button>
@@ -1776,7 +1782,7 @@ function AdminPageClient() {
           {/* 站点配置标签 */}
           <CollapsibleTab
             title='站点配置'
-            icon={<Settings size={20} className='text-gray-400' />}
+            icon={<Settings size={20} />}
             isExpanded={expandedTabs.siteConfig}
             onToggle={() => toggleTab('siteConfig')}
           >
@@ -1787,7 +1793,7 @@ function AdminPageClient() {
             {/* 用户配置标签 */}
             <CollapsibleTab
               title='用户配置'
-              icon={<Users size={20} className='text-gray-400' />}
+              icon={<Users size={20} />}
               isExpanded={expandedTabs.userConfig}
               onToggle={() => toggleTab('userConfig')}
             >
@@ -1801,7 +1807,7 @@ function AdminPageClient() {
             {/* 视频源配置标签 */}
             <CollapsibleTab
               title='视频源配置'
-              icon={<Video size={20} className='text-gray-400' />}
+              icon={<Video size={20} />}
               isExpanded={expandedTabs.videoSource}
               onToggle={() => toggleTab('videoSource')}
             >
@@ -1811,7 +1817,7 @@ function AdminPageClient() {
             {/* 分类配置标签 */}
             <CollapsibleTab
               title='分类配置'
-              icon={<FolderOpen size={20} className='text-gray-400' />}
+              icon={<FolderOpen size={20} />}
               isExpanded={expandedTabs.categoryConfig}
               onToggle={() => toggleTab('categoryConfig')}
             >
