@@ -24,6 +24,15 @@ export function Header({ transparent = true }: HeaderProps) {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentType, setCurrentType] = useState<string | null>(null);
+
+  // 监听 URL 变化获取 type 参数
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      setCurrentType(params.get('type'));
+    }
+  }, [pathname]);
 
   // 检查登录状态
   useEffect(() => {
@@ -60,12 +69,32 @@ export function Header({ transparent = true }: HeaderProps) {
 
   const isActive = useCallback(
     (href: string) => {
+      // 首页特殊处理
       if (href === '/') {
         return pathname === '/';
       }
-      return pathname.startsWith(href.split('?')[0]);
+
+      // 解析 href
+      const [hrefPath, hrefQuery] = href.split('?');
+
+      // 路径不匹配直接返回 false
+      if (!pathname.startsWith(hrefPath)) {
+        return false;
+      }
+
+      // 如果 href 有查询参数，需要检查查询参数是否匹配
+      if (hrefQuery) {
+        const hrefParams = new URLSearchParams(hrefQuery);
+        const type = hrefParams.get('type');
+        if (type) {
+          return currentType === type;
+        }
+      }
+
+      // 没有查询参数的情况，路径匹配即可
+      return pathname === hrefPath;
     },
-    [pathname]
+    [pathname, currentType]
   );
 
   const handleSearch = useCallback(
