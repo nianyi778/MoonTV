@@ -104,11 +104,11 @@ export async function fetchDoubanCategories(
 
     const doubanData: DoubanCategoryApiResponse = await response.json();
 
-    // 转换数据格式
+    // 转换数据格式，优先使用大图
     const list: DoubanItem[] = doubanData.items.map((item) => ({
       id: item.id,
       title: item.title,
-      poster: item.pic?.normal || item.pic?.large || '',
+      poster: item.pic?.large || item.pic?.normal || '',
       rate: item.rating?.value ? item.rating.value.toFixed(1) : '',
       year: item.card_subtitle?.match(/(\d{4})/)?.[1] || '',
     }));
@@ -231,11 +231,11 @@ export async function fetchDoubanList(
 
     const doubanData: DoubanCategoryApiResponse = await response.json();
 
-    // 转换数据格式
+    // 转换数据格式，优先使用大图
     const list: DoubanItem[] = doubanData.items.map((item) => ({
       id: item.id,
       title: item.title,
-      poster: item.pic?.normal || item.pic?.large || '',
+      poster: item.pic?.large || item.pic?.normal || '',
       rate: item.rating?.value ? item.rating.value.toFixed(1) : '',
       year: item.card_subtitle?.match(/(\d{4})/)?.[1] || '',
     }));

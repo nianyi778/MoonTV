@@ -362,6 +362,32 @@ export class RedisStorage implements IStorage {
 
     return configs;
   }
+
+  // ---------- 通用缓存方法 ----------
+  async getCache(key: string): Promise<any | null> {
+    const val = await withRetry(() => this.client.get(key));
+    return val ? JSON.parse(val) : null;
+  }
+
+  async setCache(key: string, data: any, ttlSeconds: number): Promise<void> {
+    await withRetry(() =>
+      this.client.set(key, JSON.stringify(data), { EX: ttlSeconds })
+    );
+  }
+
+  async deleteCache(key: string): Promise<void> {
+    await withRetry(() => this.client.del(key));
+  }
+
+  async deleteCacheByPrefix(prefix: string): Promise<void> {
+    const pattern = `${prefix}*`;
+    const keys = await withRetry(() => this.client.keys(pattern));
+    if (keys.length > 0) {
+      for (const key of keys) {
+        await withRetry(() => this.client.del(key));
+      }
+    }
+  }
 }
 
 // 单例 Redis 客户端

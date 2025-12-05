@@ -343,6 +343,30 @@ export class UpstashRedisStorage implements IStorage {
 
     return configs;
   }
+
+  // ---------- 通用缓存方法 ----------
+  async getCache(key: string): Promise<any | null> {
+    const val = await withRetry(() => this.client.get(key));
+    return val || null;
+  }
+
+  async setCache(key: string, data: any, ttlSeconds: number): Promise<void> {
+    await withRetry(() => this.client.set(key, data, { ex: ttlSeconds }));
+  }
+
+  async deleteCache(key: string): Promise<void> {
+    await withRetry(() => this.client.del(key));
+  }
+
+  async deleteCacheByPrefix(prefix: string): Promise<void> {
+    const pattern = `${prefix}*`;
+    const keys = await withRetry(() => this.client.keys(pattern));
+    if (keys.length > 0) {
+      for (const key of keys) {
+        await withRetry(() => this.client.del(key));
+      }
+    }
+  }
 }
 
 // 单例 Upstash Redis 客户端

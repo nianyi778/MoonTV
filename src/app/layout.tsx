@@ -10,6 +10,7 @@ import { getConfig } from '@/lib/config';
 import RuntimeConfig from '@/lib/runtime';
 
 import { GlobalErrorIndicator } from '../components/GlobalErrorIndicator';
+import { GlobalLoginModal } from '../components/LoginModal';
 import { SiteProvider } from '../components/SiteProvider';
 import { ThemeProvider } from '../components/ThemeProvider';
 
@@ -115,6 +116,7 @@ export default async function RootLayout({
           <SiteProvider siteName={siteName} announcement={announcement}>
             {children}
             <GlobalErrorIndicator />
+            <GlobalLoginModal />
           </SiteProvider>
         </ThemeProvider>
       </body>

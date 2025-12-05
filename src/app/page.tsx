@@ -13,33 +13,54 @@ import {
 import { getDoubanCategories } from '@/lib/douban.client';
 import { DoubanItem } from '@/lib/types';
 
-import CategoryTabs from '@/components/CategoryTabs';
-import ContentSection from '@/components/ContentSection';
-import Footer from '@/components/Footer';
-import HeroCarousel from '@/components/HeroCarousel';
 import MobileNav from '@/components/MobileNav';
 import MovieCard from '@/components/MovieCard';
-import TopNav from '@/components/TopNav';
+import { CategoryInfo, CategoryNav } from '@/components/ui/CategoryNav';
+import { Footer } from '@/components/ui/Footer';
+import { Header } from '@/components/ui/Header';
+import { HeroSection } from '@/components/ui/HeroSection';
+import { MovieSection } from '@/components/ui/MovieSection';
 
-// 分类配置
-const CATEGORIES = [
-  '全部',
-  '动作',
-  '科幻',
-  '喜剧',
-  '剧情',
-  '爱情',
-  '恐怖',
-  '动画',
-  '纪录片',
-];
+// Transform DoubanItem to the format expected by HeroSection and MovieSection
+function transformDoubanToHeroItem(items: DoubanItem[], api = 'douban') {
+  return items.map((item) => ({
+    id: item.id,
+    vod_id: item.id,
+    vod_name: item.title,
+    vod_pic: item.poster,
+    vod_year: item.year,
+    vod_remarks: item.rate ? `${item.rate}分` : undefined,
+    vod_content: '', // DoubanItem doesn't have description in list
+    type_name: '电影',
+    api: api,
+    site_key: 'douban',
+  }));
+}
+
+function transformDoubanToMovieItem(items: DoubanItem[], api = 'douban') {
+  return items.map((item) => ({
+    id: item.id,
+    vod_id: item.id,
+    vod_name: item.title,
+    vod_pic: item.poster,
+    vod_year: item.year,
+    vod_remarks: item.rate ? `${item.rate}分` : undefined,
+    type_name: '',
+    api: api,
+    site_key: 'douban',
+  }));
+}
 
 function HomeClient() {
-  const [activeCategory, setActiveCategory] = useState('全部');
   const [hotMovies, setHotMovies] = useState<DoubanItem[]>([]);
   const [hotTvShows, setHotTvShows] = useState<DoubanItem[]>([]);
   const [newReleases, setNewReleases] = useState<DoubanItem[]>([]);
+  const [filteredMovies, setFilteredMovies] = useState<DoubanItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categoryLoading, setCategoryLoading] = useState(false);
+  const [currentCategory, setCurrentCategory] = useState<CategoryInfo | null>(
+    null
+  );
 
   // 收藏夹数据
   type FavoriteItem = {
@@ -108,6 +129,35 @@ function HomeClient() {
     fetchDoubanData();
   }, []);
 
+  // 处理分类切换
+  const handleCategoryChange = useCallback(async (category: CategoryInfo) => {
+    setCurrentCategory(category);
+
+    // 如果是全部，清空筛选结果
+    if (category.id === 'all') {
+      setFilteredMovies([]);
+      return;
+    }
+
+    setCategoryLoading(true);
+    try {
+      const result = await getDoubanCategories({
+        kind: 'movie',
+        category: category.doubanCategory,
+        type: category.doubanType,
+        pageLimit: 20,
+      });
+
+      if (result.code === 200) {
+        setFilteredMovies(result.list);
+      }
+    } catch {
+      // 静默失败
+    } finally {
+      setCategoryLoading(false);
+    }
+  }, []);
+
   // 处理收藏数据更新的函数
   const updateFavoriteItems = useCallback(
     async (allFavorites: Record<string, any>) => {
@@ -161,27 +211,34 @@ function HomeClient() {
     return unsubscribe;
   }, [showFavorites, updateFavoriteItems]);
 
-  // 电影骨架屏
+  // 骨架屏
   const MovieSkeleton = () => (
     <div className='flex-shrink-0 w-[140px] md:w-[180px]'>
-      <div className='aspect-[2/3] rounded-xl skeleton' />
-      <div className='mt-3 h-4 w-3/4 skeleton rounded' />
-      <div className='mt-2 h-3 w-1/2 skeleton rounded' />
+      <div className='aspect-[2/3] rounded-lg bg-zinc-800 animate-pulse' />
+      <div className='mt-3 h-4 w-3/4 bg-zinc-800 rounded animate-pulse' />
+      <div className='mt-2 h-3 w-1/2 bg-zinc-800 rounded animate-pulse' />
     </div>
   );
 
+  // Hero 骨架屏
+  const HeroSkeleton = () => (
+    <section className='relative h-[85vh] w-full bg-zinc-900 flex items-center justify-center'>
+      <div className='text-zinc-400'>加载中...</div>
+    </section>
+  );
+
   return (
-    <div className='min-h-screen bg-[#0a0a0a]'>
+    <div className='min-h-screen bg-zinc-950'>
       {/* 顶部导航 */}
-      <TopNav transparent={!showFavorites} />
+      <Header transparent={!showFavorites} />
 
       {showFavorites ? (
         // 收藏夹视图
         <main className='pt-24 pb-24 md:pb-12'>
-          <div className='px-[5%]'>
+          <div className='container mx-auto px-4'>
             <div className='flex items-center justify-between mb-8'>
               <div className='flex items-center gap-3'>
-                <Heart className='w-8 h-8 text-brand-500' />
+                <Heart className='w-8 h-8 text-orange-500' />
                 <h1 className='text-3xl font-bold text-white'>我的收藏</h1>
               </div>
               {favoriteItems.length > 0 && (
@@ -190,7 +247,7 @@ function HomeClient() {
                     await clearAllFavorites();
                     setFavoriteItems([]);
                   }}
-                  className='px-4 py-2 text-sm font-medium text-gray-400 hover:text-red-500 bg-white/5 hover:bg-red-500/10 rounded-lg transition-all'
+                  className='px-4 py-2 text-sm font-medium text-zinc-400 hover:text-red-500 bg-zinc-800 hover:bg-red-500/10 rounded-lg transition-all'
                 >
                   清空全部
                 </button>
@@ -215,10 +272,10 @@ function HomeClient() {
                 ))}
               </div>
             ) : (
-              <div className='flex flex-col items-center justify-center py-20 text-gray-500'>
+              <div className='flex flex-col items-center justify-center py-20 text-zinc-500'>
                 <Heart className='w-16 h-16 mb-4 opacity-30' />
                 <p className='text-lg font-medium'>暂无收藏内容</p>
-                <p className='text-sm mt-1 text-gray-600'>
+                <p className='text-sm mt-1 text-zinc-600'>
                   浏览影片时点击心形图标添加收藏
                 </p>
               </div>
@@ -229,88 +286,94 @@ function HomeClient() {
         // 首页视图
         <main className='pb-24 md:pb-0'>
           {/* 英雄轮播 */}
-          <HeroCarousel items={hotMovies.slice(0, 5)} />
+          {loading ? (
+            <HeroSkeleton />
+          ) : (
+            <HeroSection
+              items={transformDoubanToHeroItem(hotMovies.slice(0, 5))}
+            />
+          )}
 
           {/* 分类标签 */}
-          <div className='px-[5%] relative z-10'>
-            <CategoryTabs
-              categories={CATEGORIES}
-              activeCategory={activeCategory}
-              onChange={setActiveCategory}
-            />
-          </div>
+          <CategoryNav onCategoryChange={handleCategoryChange} />
+
+          {/* 分类筛选结果 */}
+          {currentCategory &&
+            currentCategory.id !== 'all' &&
+            (categoryLoading ? (
+              <section className='container mx-auto px-4 py-6 md:py-8'>
+                <h2 className='text-xl md:text-2xl font-bold text-white mb-4'>
+                  {currentCategory.name}电影
+                </h2>
+                <div className='flex gap-4 overflow-hidden'>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <MovieSkeleton key={i} />
+                  ))}
+                </div>
+              </section>
+            ) : filteredMovies.length > 0 ? (
+              <MovieSection
+                title={`${currentCategory.name}电影`}
+                movies={transformDoubanToMovieItem(filteredMovies)}
+              />
+            ) : null)}
 
           {/* 热门电影 */}
-          <ContentSection title='热门电影' moreLink='/douban?type=movie'>
-            {loading
-              ? Array.from({ length: 8 }).map((_, i) => (
+          {loading ? (
+            <section className='container mx-auto px-4 py-6 md:py-8'>
+              <h2 className='text-xl md:text-2xl font-bold text-white mb-4'>
+                热门电影
+              </h2>
+              <div className='flex gap-4 overflow-hidden'>
+                {Array.from({ length: 8 }).map((_, i) => (
                   <MovieSkeleton key={i} />
-                ))
-              : hotMovies.map((movie) => (
-                  <div
-                    key={movie.id}
-                    className='flex-shrink-0 w-[140px] md:w-[180px]'
-                  >
-                    <MovieCard
-                      from='douban'
-                      title={movie.title}
-                      poster={movie.poster}
-                      douban_id={movie.id}
-                      rate={movie.rate}
-                      year={movie.year}
-                      type='movie'
-                    />
-                  </div>
                 ))}
-          </ContentSection>
+              </div>
+            </section>
+          ) : (
+            <MovieSection
+              title='热门电影'
+              movies={transformDoubanToMovieItem(hotMovies)}
+            />
+          )}
 
           {/* 最新上映 */}
-          <ContentSection title='最新上映' moreLink='/douban?type=movie'>
-            {loading
-              ? Array.from({ length: 8 }).map((_, i) => (
+          {loading ? (
+            <section className='container mx-auto px-4 py-6 md:py-8'>
+              <h2 className='text-xl md:text-2xl font-bold text-white mb-4'>
+                最新上映
+              </h2>
+              <div className='flex gap-4 overflow-hidden'>
+                {Array.from({ length: 8 }).map((_, i) => (
                   <MovieSkeleton key={i} />
-                ))
-              : newReleases.map((movie) => (
-                  <div
-                    key={movie.id}
-                    className='flex-shrink-0 w-[140px] md:w-[180px]'
-                  >
-                    <MovieCard
-                      from='douban'
-                      title={movie.title}
-                      poster={movie.poster}
-                      douban_id={movie.id}
-                      rate={movie.rate}
-                      year={movie.year}
-                      type='movie'
-                    />
-                  </div>
                 ))}
-          </ContentSection>
+              </div>
+            </section>
+          ) : (
+            <MovieSection
+              title='最新上映'
+              movies={transformDoubanToMovieItem(newReleases)}
+            />
+          )}
 
           {/* 热门剧集 */}
-          <ContentSection title='热门剧集' moreLink='/douban?type=tv'>
-            {loading
-              ? Array.from({ length: 8 }).map((_, i) => (
+          {loading ? (
+            <section className='container mx-auto px-4 py-6 md:py-8'>
+              <h2 className='text-xl md:text-2xl font-bold text-white mb-4'>
+                热门剧集
+              </h2>
+              <div className='flex gap-4 overflow-hidden'>
+                {Array.from({ length: 8 }).map((_, i) => (
                   <MovieSkeleton key={i} />
-                ))
-              : hotTvShows.map((show) => (
-                  <div
-                    key={show.id}
-                    className='flex-shrink-0 w-[140px] md:w-[180px]'
-                  >
-                    <MovieCard
-                      from='douban'
-                      title={show.title}
-                      poster={show.poster}
-                      douban_id={show.id}
-                      rate={show.rate}
-                      year={show.year}
-                      type='tv'
-                    />
-                  </div>
                 ))}
-          </ContentSection>
+              </div>
+            </section>
+          ) : (
+            <MovieSection
+              title='热门剧集'
+              movies={transformDoubanToMovieItem(hotTvShows)}
+            />
+          )}
 
           {/* 页脚 */}
           <Footer />
@@ -327,8 +390,8 @@ export default function Home() {
   return (
     <Suspense
       fallback={
-        <div className='min-h-screen bg-[#0a0a0a] flex items-center justify-center'>
-          <div className='w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin' />
+        <div className='min-h-screen bg-zinc-950 flex items-center justify-center'>
+          <div className='w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin' />
         </div>
       }
     >

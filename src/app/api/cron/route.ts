@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { db } from '@/lib/db';
 import { fetchVideoDetail } from '@/lib/fetchVideoDetail';
+import { runSourceMaintenance } from '@/lib/sourceDiscovery';
 import { SearchResult } from '@/lib/types';
 
 export const runtime = 'edge';
@@ -13,12 +14,26 @@ export async function GET(request: NextRequest) {
   try {
     console.log('Cron job triggered:', new Date().toISOString());
 
-    refreshRecordAndFavorites();
+    // 运行所有维护任务
+    const [recordResult, sourceResult] = await Promise.allSettled([
+      refreshRecordAndFavorites(),
+      runSourceMaintenanceTask(),
+    ]);
 
     return NextResponse.json({
       success: true,
       message: 'Cron job executed successfully',
       timestamp: new Date().toISOString(),
+      results: {
+        recordRefresh:
+          recordResult.status === 'fulfilled' ? 'success' : 'failed',
+        sourceMaintenance:
+          sourceResult.status === 'fulfilled'
+            ? sourceResult.value
+            : {
+                error: (sourceResult as PromiseRejectedResult).reason?.message,
+              },
+      },
     });
   } catch (error) {
     console.error('Cron job failed:', error);
@@ -32,6 +47,34 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
+  }
+}
+
+// 片源维护任务
+async function runSourceMaintenanceTask() {
+  if (
+    (process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage') === 'localstorage'
+  ) {
+    console.log('跳过片源维护：当前使用 localstorage 存储模式');
+    return { skipped: true };
+  }
+
+  try {
+    const result = await runSourceMaintenance();
+    return {
+      discovery: {
+        discovered: result.discovery.discovered,
+        available: result.discovery.available,
+      },
+      quality: {
+        checked: result.quality.checked,
+        healthy: result.quality.healthy,
+      },
+      update: result.update,
+    };
+  } catch (err) {
+    console.error('片源维护任务失败:', err);
+    throw err;
   }
 }
 
