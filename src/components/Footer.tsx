@@ -24,7 +24,7 @@ export default function Footer() {
     account: [
       { label: '我的账户', href: '/login' },
       { label: '观看历史', href: '/' },
-      { label: '我的片单', href: '/?tab=favorites' },
+      { label: '我的片单', href: '/favorites' },
       { label: '会员订阅', href: '#' },
     ],
   };

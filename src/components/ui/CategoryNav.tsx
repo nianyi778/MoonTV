@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 // 豆瓣电影分类映射
 const categories = [
   { id: 'all', name: '全部', doubanCategory: '热门', doubanType: '全部' },
@@ -28,14 +26,15 @@ export interface CategoryInfo {
 }
 
 interface CategoryNavProps {
+  activeId?: string;
   onCategoryChange?: (category: CategoryInfo) => void;
 }
 
-export function CategoryNav({ onCategoryChange }: CategoryNavProps) {
-  const [activeCategory, setActiveCategory] = useState('all');
-
+export function CategoryNav({
+  activeId = 'all',
+  onCategoryChange,
+}: CategoryNavProps) {
   const handleCategoryClick = (category: (typeof categories)[0]) => {
-    setActiveCategory(category.id);
     onCategoryChange?.(category);
   };
 
@@ -47,7 +46,7 @@ export function CategoryNav({ onCategoryChange }: CategoryNavProps) {
             key={category.id}
             onClick={() => handleCategoryClick(category)}
             className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-              activeCategory === category.id
+              activeId === category.id
                 ? 'bg-orange-500 text-white'
                 : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'
             }`}

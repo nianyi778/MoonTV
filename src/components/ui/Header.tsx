@@ -52,13 +52,13 @@ export function Header({ transparent = true }: HeaderProps) {
 
   // 只有登录时才显示"我的片单"
   const navLinks = isLoggedIn
-    ? [...baseNavLinks, { label: '我的片单', href: '/?tab=favorites' }]
+    ? [...baseNavLinks, { label: '我的片单', href: '/favorites' }]
     : baseNavLinks;
 
   const isActive = useCallback(
     (href: string) => {
       if (href === '/') {
-        return pathname === '/' && !href.includes('tab=favorites');
+        return pathname === '/';
       }
       return pathname.startsWith(href.split('?')[0]);
     },

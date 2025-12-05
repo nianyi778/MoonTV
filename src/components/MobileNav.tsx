@@ -13,12 +13,12 @@ export default function MobileNav() {
     { icon: Search, label: '搜索', href: '/search' },
     { icon: Clapperboard, label: '电影', href: '/douban?type=movie' },
     { icon: Tv, label: '剧集', href: '/douban?type=tv' },
-    { icon: Heart, label: '收藏', href: '/?tab=favorites' },
+    { icon: Heart, label: '收藏', href: '/favorites' },
   ];
 
   const isActive = (href: string) => {
     if (href === '/') {
-      return pathname === '/' && !href.includes('tab=favorites');
+      return pathname === '/';
     }
     if (href.includes('?')) {
       return pathname.startsWith(href.split('?')[0]);
