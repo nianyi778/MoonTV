@@ -60,7 +60,19 @@ export default function HeroCarousel({ items }: HeroCarouselProps) {
     window.open(`https://movie.douban.com/subject/${currentItem.id}`, '_blank');
   }, [currentItem]);
 
-  if (!items.length) return null;
+  if (!items.length) {
+    // 没有数据时显示占位区域
+    return (
+      <section className='relative w-full h-[50vh] min-h-[400px] bg-gradient-to-b from-gray-900 to-[#0a0a0a] flex items-center justify-center'>
+        <div className='text-center text-gray-500'>
+          <div className='w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center'>
+            <Play className='w-8 h-8 opacity-30' />
+          </div>
+          <p>暂无推荐内容</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className='relative w-full h-[70vh] min-h-[500px] max-h-[800px] overflow-hidden'>

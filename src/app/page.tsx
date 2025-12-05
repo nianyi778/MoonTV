@@ -232,7 +232,7 @@ function HomeClient() {
           <HeroCarousel items={hotMovies.slice(0, 5)} />
 
           {/* 分类标签 */}
-          <div className='px-[5%] -mt-8 relative z-10'>
+          <div className='px-[5%] relative z-10'>
             <CategoryTabs
               categories={CATEGORIES}
               activeCategory={activeCategory}
