@@ -13,7 +13,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-import { getDoubanHDPoster, getHDCover } from '@/lib/hdCover';
+import { getHDCover } from '@/lib/hdCover';
 
 interface HeroItem {
   id: string;
@@ -32,6 +32,15 @@ interface HeroSectionProps {
   items: HeroItem[];
 }
 
+// 处理图片 URL，豆瓣图片需要代理
+function getProxiedImageUrl(url: string): string {
+  if (!url) return '/placeholder.jpg';
+  if (url.includes('doubanio.com') || url.includes('douban.com')) {
+    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 // 存储已加载的高清封面
 const hdCoversCache = new Map<string, string>();
 
@@ -44,46 +53,46 @@ export function HeroSection({ items }: HeroSectionProps) {
 
   const heroItems = items.slice(0, 5);
 
-  // 预加载所有 hero items 的高清封面
+  // 只加载当前和下一个 item 的 TMDB 高清封面（懒加载）
   useEffect(() => {
-    const loadHDCovers = async () => {
-      const covers: Record<string, string> = {};
+    const loadCurrentHDCover = async () => {
+      const indicesToLoad = [
+        currentIndex,
+        (currentIndex + 1) % heroItems.length,
+      ];
 
-      await Promise.all(
-        heroItems.map(async (item) => {
-          const key = item.id || item.vod_id;
+      for (const idx of indicesToLoad) {
+        const item = heroItems[idx];
+        if (!item) continue;
 
-          // 检查缓存
-          const cachedUrl = hdCoversCache.get(key);
-          if (cachedUrl) {
-            covers[key] = cachedUrl;
-            return;
-          }
+        const key = item.id || item.vod_id;
 
-          try {
-            // 优先获取 TMDB backdrop（横版高清背景图）
-            const hdUrl = await getHDCover(
-              item.vod_pic,
-              item.vod_name,
-              item.vod_year,
-              'backdrop' // 使用横版背景图
-            );
-            covers[key] = hdUrl;
+        // 已有缓存则跳过
+        if (hdCoversCache.has(key) || hdCovers[key]) continue;
+
+        try {
+          const hdUrl = await getHDCover(
+            item.vod_pic,
+            item.vod_name,
+            item.vod_year,
+            'backdrop'
+          );
+
+          // 只有 TMDB 图片才更新
+          if (hdUrl.includes('tmdb.org')) {
             hdCoversCache.set(key, hdUrl);
-          } catch {
-            // 失败时使用豆瓣高清
-            covers[key] = getDoubanHDPoster(item.vod_pic);
+            setHdCovers((prev) => ({ ...prev, [key]: hdUrl }));
           }
-        })
-      );
-
-      setHdCovers(covers);
+        } catch {
+          // 忽略错误
+        }
+      }
     };
 
     if (heroItems.length > 0) {
-      loadHDCovers();
+      loadCurrentHDCover();
     }
-  }, [heroItems]);
+  }, [currentIndex, heroItems, hdCovers]);
 
   const goToSlide = useCallback(
     (index: number) => {
@@ -146,9 +155,8 @@ export function HeroSection({ items }: HeroSectionProps) {
       {/* Background Images */}
       {heroItems.map((item, index) => {
         const key = item.id || item.vod_id;
-        // 优先使用已加载的高清封面
-        const hdPoster = hdCovers[key] || getDoubanHDPoster(item.vod_pic);
-        const fallbackPoster = item.vod_pic || '/placeholder.jpg';
+        // 优先使用 TMDB 高清封面，否则用代理后的豆瓣图
+        const hdPoster = hdCovers[key] || getProxiedImageUrl(item.vod_pic);
 
         return (
           <div
@@ -158,7 +166,7 @@ export function HeroSection({ items }: HeroSectionProps) {
             }`}
           >
             <Image
-              src={hdPoster || fallbackPoster}
+              src={hdPoster}
               alt={item.vod_name}
               fill
               className='object-cover'

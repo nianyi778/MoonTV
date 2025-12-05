@@ -20,9 +20,21 @@ interface MovieCardProps {
   movie: Movie;
 }
 
+// 处理图片 URL，豆瓣图片需要代理
+function getProxiedImageUrl(url: string): string {
+  if (!url) return '/placeholder.jpg';
+  // 豆瓣图片需要代理
+  if (url.includes('doubanio.com') || url.includes('douban.com')) {
+    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 export function MovieCard({ movie }: MovieCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
+
+  const imageUrl = getProxiedImageUrl(movie.vod_pic);
 
   // 根据数据来源生成不同的播放链接
   const playUrl =
@@ -44,8 +56,9 @@ export function MovieCard({ movie }: MovieCardProps) {
         {!imageError ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={movie.vod_pic || '/placeholder.jpg'}
+            src={imageUrl}
             alt={movie.vod_name}
+            loading='lazy'
             className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-110'
             onError={() => setImageError(true)}
           />
