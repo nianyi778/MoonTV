@@ -36,8 +36,6 @@ import Swal from 'sweetalert2';
 import { AdminConfig, AdminConfigResult } from '@/lib/admin.types';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
-import PageLayout from '@/components/PageLayout';
-
 // 统一弹窗方法（必须在首次使用前定义）
 const showError = (message: string) =>
   Swal.fire({ icon: 'error', title: '错误', text: message });
@@ -1737,9 +1735,9 @@ function AdminPageClient() {
 
   if (loading) {
     return (
-      <PageLayout activePath='/admin'>
-        <div className='px-2 sm:px-10 py-4 sm:py-8'>
-          <div className='max-w-[95%] mx-auto'>
+      <div className='min-h-screen bg-zinc-950'>
+        <div className='px-4 sm:px-8 py-6 sm:py-10'>
+          <div className='max-w-4xl mx-auto'>
             <h1 className='text-2xl font-bold text-white mb-8'>管理员设置</h1>
             <div className='space-y-4'>
               {Array.from({ length: 3 }).map((_, index) => (
@@ -1751,7 +1749,7 @@ function AdminPageClient() {
             </div>
           </div>
         </div>
-      </PageLayout>
+      </div>
     );
   }
 
@@ -1761,8 +1759,34 @@ function AdminPageClient() {
   }
 
   return (
-    <PageLayout activePath='/admin'>
-      <div className='px-4 sm:px-8 py-6 sm:py-10 bg-zinc-950 min-h-screen'>
+    <div className='min-h-screen bg-zinc-950'>
+      {/* 顶部导航栏 */}
+      <header className='sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800'>
+        <div className='max-w-4xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between'>
+          <a
+            href='/'
+            className='flex items-center gap-2 text-zinc-400 hover:text-white transition-colors'
+          >
+            <svg
+              className='w-5 h-5'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M10 19l-7-7m0 0l7-7m-7 7h18'
+              />
+            </svg>
+            <span className='text-sm font-medium'>返回首页</span>
+          </a>
+          <span className='text-sm text-zinc-500'>管理后台</span>
+        </div>
+      </header>
+
+      <div className='px-4 sm:px-8 py-6 sm:py-10'>
         <div className='max-w-4xl mx-auto'>
           {/* 标题 + 重置配置按钮 */}
           <div className='flex items-center gap-3 mb-8'>
@@ -1826,7 +1850,7 @@ function AdminPageClient() {
           </div>
         </div>
       </div>
-    </PageLayout>
+    </div>
   );
 }
 
