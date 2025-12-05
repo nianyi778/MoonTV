@@ -39,6 +39,9 @@ export function Header({ transparent = true }: HeaderProps) {
       setIsScrolled(window.scrollY > 50);
     };
 
+    // 立即检查一次当前滚动位置
+    handleScroll();
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
