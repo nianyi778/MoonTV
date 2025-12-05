@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getHDCover } from '@/lib/hdCover';
 
@@ -97,7 +97,8 @@ export function HeroSection({ items }: HeroSectionProps) {
   );
   const router = useRouter();
 
-  const heroItems = items.slice(0, 5);
+  // 使用 useMemo 避免每次渲染创建新数组
+  const heroItems = useMemo(() => items.slice(0, 5), [items]);
 
   // 初始化想看状态
   useEffect(() => {

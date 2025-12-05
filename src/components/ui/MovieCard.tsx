@@ -47,6 +47,7 @@ export function MovieCard({ movie }: MovieCardProps) {
   return (
     <Link
       href={playUrl}
+      prefetch={false}
       className='relative flex-shrink-0 w-[140px] md:w-[180px] group cursor-pointer'
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

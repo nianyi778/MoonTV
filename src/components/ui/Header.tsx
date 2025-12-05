@@ -108,6 +108,7 @@ export function Header({ transparent = true }: HeaderProps) {
                 <li key={link.href}>
                   <Link
                     href={link.href}
+                    prefetch={false}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
                       isActive(link.href)
                         ? 'text-white'
@@ -241,6 +242,7 @@ export function Header({ transparent = true }: HeaderProps) {
                   <Link
                     key={link.href}
                     href={link.href}
+                    prefetch={false}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors ${
                       isActive(link.href)
