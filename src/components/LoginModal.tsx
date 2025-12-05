@@ -16,7 +16,7 @@ interface LoginModalProps {
   redirectUrl?: string;
 }
 
-type AuthMode = 'login' | 'register' | 'email-register';
+type AuthMode = 'login' | 'register';
 
 export function LoginModal({
   isOpen,
@@ -135,45 +135,6 @@ export function LoginModal({
     }
   };
 
-  // 用户名注册
-  const handleRegister = async () => {
-    setError(null);
-    if (!password || !username) {
-      setError('请填写用户名和密码');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('两次密码不一致');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (res.ok) {
-        handleClose();
-        onSuccess?.();
-        if (redirectUrl) {
-          router.replace(redirectUrl);
-        } else {
-          router.refresh();
-        }
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error ?? '注册失败');
-      }
-    } catch {
-      setError('网络错误，请稍后重试');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // 邮箱注册
   const handleEmailRegister = async () => {
     setError(null);
@@ -246,8 +207,7 @@ export function LoginModal({
           <h2 className='text-2xl font-bold text-orange-500'>{siteName}</h2>
           <p className='text-zinc-400 text-sm mt-2'>
             {mode === 'login' && '登录以享受完整功能'}
-            {mode === 'register' && '创建新账户'}
-            {mode === 'email-register' && '使用邮箱注册'}
+            {mode === 'register' && '使用邮箱注册新账户'}
           </p>
         </div>
 
@@ -281,42 +241,8 @@ export function LoginModal({
               </>
             )}
 
-            {/* 用户名注册模式 */}
-            {mode === 'register' && (
-              <>
-                <div className='relative'>
-                  <User className='absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500' />
-                  <input
-                    type='text'
-                    placeholder='用户名'
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className='w-full pl-12 pr-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all'
-                  />
-                </div>
-                <div className='relative'>
-                  <input
-                    type='password'
-                    placeholder='密码'
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className='w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all'
-                  />
-                </div>
-                <div className='relative'>
-                  <input
-                    type='password'
-                    placeholder='确认密码'
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className='w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder:text-zinc-500 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all'
-                  />
-                </div>
-              </>
-            )}
-
             {/* 邮箱注册模式 */}
-            {mode === 'email-register' && (
+            {mode === 'register' && (
               <>
                 <div className='relative'>
                   <Mail className='absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500' />
@@ -370,22 +296,11 @@ export function LoginModal({
             {mode === 'register' && (
               <button
                 type='button'
-                onClick={handleRegister}
-                disabled={loading || !password || !username}
-                className='w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed'
-              >
-                {loading ? '注册中...' : '注册'}
-              </button>
-            )}
-
-            {mode === 'email-register' && (
-              <button
-                type='button'
                 onClick={handleEmailRegister}
                 disabled={loading || !password || !email}
                 className='w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                {loading ? '注册中...' : '邮箱注册'}
+                {loading ? '注册中...' : '注册'}
               </button>
             )}
           </form>
@@ -394,31 +309,19 @@ export function LoginModal({
           {shouldAskUsername && enableRegister && (
             <div className='mt-6 pt-6 border-t border-zinc-800'>
               {mode === 'login' && (
-                <div className='flex flex-col gap-3'>
-                  <button
-                    onClick={() => {
-                      setError(null);
-                      setMode('register');
-                    }}
-                    className='w-full py-2.5 text-sm text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-xl transition-all flex items-center justify-center gap-2'
-                  >
-                    <User className='w-4 h-4' />
-                    用户名注册
-                  </button>
-                  <button
-                    onClick={() => {
-                      setError(null);
-                      setMode('email-register');
-                    }}
-                    className='w-full py-2.5 text-sm text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-xl transition-all flex items-center justify-center gap-2'
-                  >
-                    <Mail className='w-4 h-4' />
-                    邮箱注册
-                  </button>
-                </div>
+                <button
+                  onClick={() => {
+                    setError(null);
+                    setMode('register');
+                  }}
+                  className='w-full py-2.5 text-sm text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-xl transition-all flex items-center justify-center gap-2'
+                >
+                  <Mail className='w-4 h-4' />
+                  邮箱注册
+                </button>
               )}
 
-              {(mode === 'register' || mode === 'email-register') && (
+              {mode === 'register' && (
                 <button
                   onClick={() => {
                     setError(null);
