@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
+import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
+
 import { useSite } from './SiteProvider';
 import { UserMenu } from './UserMenu';
 
@@ -19,6 +21,15 @@ export default function TopNav({ transparent = true }: TopNavProps) {
   const { siteName } = useSite();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // 检查登录状态
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const auth = getAuthInfoFromBrowserCookie();
+      setIsLoggedIn(!!auth?.username);
+    }
+  }, []);
 
   // 监听滚动
   useEffect(() => {
@@ -30,13 +41,17 @@ export default function TopNav({ transparent = true }: TopNavProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = [
+  const baseNavLinks = [
     { label: '首页', href: '/' },
     { label: '电影', href: '/douban?type=movie' },
     { label: '电视剧', href: '/douban?type=tv' },
     { label: '动漫', href: '/douban?type=show' },
-    { label: '我的片单', href: '/?tab=favorites' },
   ];
+
+  // 只有登录时才显示"我的片单"
+  const navLinks = isLoggedIn
+    ? [...baseNavLinks, { label: '我的片单', href: '/?tab=favorites' }]
+    : baseNavLinks;
 
   const isActive = useCallback(
     (href: string) => {
