@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Check,
   ChevronLeft,
   ChevronRight,
   Info,
@@ -14,6 +15,48 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import { getHDCover } from '@/lib/hdCover';
+
+// 想看列表 localStorage 操作
+const WISHLIST_KEY = 'moontv_wishlist';
+
+function getWishlist(): Record<
+  string,
+  { title: string; year?: string; poster: string; addedAt: number }
+> {
+  if (typeof window === 'undefined') return {};
+  try {
+    return JSON.parse(localStorage.getItem(WISHLIST_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function isInWishlist(id: string): boolean {
+  return !!getWishlist()[id];
+}
+
+function addToWishlist(
+  id: string,
+  title: string,
+  year?: string,
+  poster?: string
+): void {
+  const wishlist = getWishlist();
+  wishlist[id] = { title, year, poster: poster || '', addedAt: Date.now() };
+  localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
+  window.dispatchEvent(
+    new CustomEvent('wishlistUpdated', { detail: wishlist })
+  );
+}
+
+function removeFromWishlist(id: string): void {
+  const wishlist = getWishlist();
+  delete wishlist[id];
+  localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
+  window.dispatchEvent(
+    new CustomEvent('wishlistUpdated', { detail: wishlist })
+  );
+}
 
 interface HeroItem {
   id: string;
@@ -49,9 +92,42 @@ export function HeroSection({ items }: HeroSectionProps) {
   const [isMuted, setIsMuted] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [hdCovers, setHdCovers] = useState<Record<string, string>>({});
+  const [wishlistStatus, setWishlistStatus] = useState<Record<string, boolean>>(
+    {}
+  );
   const router = useRouter();
 
   const heroItems = items.slice(0, 5);
+
+  // 初始化想看状态
+  useEffect(() => {
+    const updateWishlistStatus = () => {
+      const status: Record<string, boolean> = {};
+      heroItems.forEach((item) => {
+        const key = item.id || item.vod_id;
+        status[key] = isInWishlist(key);
+      });
+      setWishlistStatus(status);
+    };
+
+    updateWishlistStatus();
+
+    // 监听想看列表更新
+    const handleWishlistUpdate = () => updateWishlistStatus();
+    window.addEventListener('wishlistUpdated', handleWishlistUpdate);
+    return () =>
+      window.removeEventListener('wishlistUpdated', handleWishlistUpdate);
+  }, [heroItems]);
+
+  // 切换想看状态
+  const toggleWishlist = useCallback((item: HeroItem) => {
+    const key = item.id || item.vod_id;
+    if (isInWishlist(key)) {
+      removeFromWishlist(key);
+    } else {
+      addToWishlist(key, item.vod_name, item.vod_year, item.vod_pic);
+    }
+  }, []);
 
   // 只加载当前和下一个 item 的 TMDB 高清封面（懒加载）
   useEffect(() => {
@@ -257,9 +333,24 @@ export function HeroSection({ items }: HeroSectionProps) {
                 <span>立即播放</span>
               </button>
 
-              <button className='flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-semibold rounded-lg transition-all duration-200 border border-white/20'>
-                <Plus className='h-5 w-5' />
-                <span className='hidden md:inline'>添加片单</span>
+              <button
+                onClick={() => toggleWishlist(currentItem)}
+                className={`flex items-center gap-2 px-6 py-3 backdrop-blur-sm font-semibold rounded-lg transition-all duration-200 border ${
+                  wishlistStatus[currentItem.id || currentItem.vod_id]
+                    ? 'bg-orange-500 border-orange-500 text-white'
+                    : 'bg-white/10 hover:bg-white/20 border-white/20 text-white'
+                }`}
+              >
+                {wishlistStatus[currentItem.id || currentItem.vod_id] ? (
+                  <Check className='h-5 w-5' />
+                ) : (
+                  <Plus className='h-5 w-5' />
+                )}
+                <span className='hidden md:inline'>
+                  {wishlistStatus[currentItem.id || currentItem.vod_id]
+                    ? '已添加'
+                    : '添加片单'}
+                </span>
               </button>
 
               <button

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Heart, Play, Plus } from 'lucide-react';
+import { Play, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -260,22 +260,29 @@ export default function MovieCard({
         {showFavorite && (
           <div className='absolute bottom-3 left-0 right-0 flex justify-center gap-2 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300'>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-              className='w-9 h-9 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors'
-            >
-              <Plus className='w-4 h-4' />
-            </button>
-            <button
               onClick={handleToggleFavorite}
-              className={`w-9 h-9 flex items-center justify-center backdrop-blur-sm rounded-full transition-colors ${
+              className={`w-9 h-9 flex items-center justify-center backdrop-blur-sm rounded-full transition-all duration-200 ${
                 favorited
-                  ? 'bg-red-500 text-white'
-                  : 'bg-black/60 text-white hover:bg-red-500'
+                  ? 'bg-orange-500 text-white scale-110'
+                  : 'bg-black/60 text-white hover:bg-orange-500'
               }`}
+              title={favorited ? '取消收藏' : '添加收藏'}
             >
-              <Heart className={`w-4 h-4 ${favorited ? 'fill-white' : ''}`} />
+              {favorited ? (
+                <svg
+                  className='w-4 h-4'
+                  fill='currentColor'
+                  viewBox='0 0 20 20'
+                >
+                  <path
+                    fillRule='evenodd'
+                    d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
+                    clipRule='evenodd'
+                  />
+                </svg>
+              ) : (
+                <Plus className='w-4 h-4' />
+              )}
             </button>
           </div>
         )}
