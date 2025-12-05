@@ -14,23 +14,30 @@ export async function middleware(request: NextRequest) {
 
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
 
+  // 如果没有设置密码，允许访问（不再强制登录）
   if (!process.env.PASSWORD) {
-    // 如果没有设置密码，重定向到警告页面
-    const warningUrl = new URL('/warning', request.url);
-    return NextResponse.redirect(warningUrl);
+    return NextResponse.next();
   }
 
   // 从cookie获取认证信息
   const authInfo = getAuthInfoFromCookie(request);
 
+  // 如果用户未登录，允许访问普通页面（不再强制登录）
+  // 只有管理后台 /admin 需要强制登录
   if (!authInfo) {
-    return handleAuthFailure(request, pathname);
+    if (pathname.startsWith('/admin')) {
+      return handleAuthFailure(request, pathname);
+    }
+    return NextResponse.next();
   }
 
   // localstorage模式：在middleware中完成验证
   if (storageType === 'localstorage') {
     if (!authInfo.password || authInfo.password !== process.env.PASSWORD) {
-      return handleAuthFailure(request, pathname);
+      if (pathname.startsWith('/admin')) {
+        return handleAuthFailure(request, pathname);
+      }
+      return NextResponse.next();
     }
     return NextResponse.next();
   }
@@ -38,7 +45,10 @@ export async function middleware(request: NextRequest) {
   // 其他模式：只验证签名
   // 检查是否有用户名（非localStorage模式下密码不存储在cookie中）
   if (!authInfo.username || !authInfo.signature) {
-    return handleAuthFailure(request, pathname);
+    if (pathname.startsWith('/admin')) {
+      return handleAuthFailure(request, pathname);
+    }
+    return NextResponse.next();
   }
 
   // 验证签名（如果存在）
@@ -55,8 +65,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 签名验证失败或不存在签名
-  return handleAuthFailure(request, pathname);
+  // 签名验证失败，只有管理后台需要阻止
+  if (pathname.startsWith('/admin')) {
+    return handleAuthFailure(request, pathname);
+  }
+  return NextResponse.next();
 }
 
 // 验证签名
